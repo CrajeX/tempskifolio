@@ -1,7 +1,7 @@
 
 import React from "react";
 import '../styles.css';
-
+import PageTemplate, { containerVariants, itemVariants } from "./PageTemplate";
 const developers = [
   {
     name: "Ken Robert Noleal",
@@ -27,6 +27,7 @@ const developers = [
 
 const AboutUs = () => {
   return (
+       <PageTemplate className="about-us-page">
     <div className="about-wrapper">
       {/* Header */}
       <header className="top-header">
@@ -63,6 +64,7 @@ const AboutUs = () => {
         Â© {new Date().getFullYear()} Ski-Folio. All rights reserved.
       </footer>
     </div>
+    </PageTemplate>
   );
 };
 

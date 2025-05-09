@@ -430,7 +430,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, storage, auth } from '../firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { doc, getDoc, updateDoc, arrayRemove, setDoc, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayRemove, setDoc, collection, addDoc,serverTimestamp } from 'firebase/firestore';
 
 const ApplicantProfile = () => {
     const [profilePicURL, setProfilePicURL] = useState('');
@@ -667,13 +667,31 @@ const ApplicantProfile = () => {
         try {
             // Archive the certificate before deletion
             await archiveFile(type, skill, certificate);
-        
+            
             // Delete the image from storage if there is an imageURL
-            if (certificate.imageURL) {
-                const storageRef = ref(storage, certificate.imageURL);
-                await deleteObject(storageRef);
-            }
-        
+           if (certificate.imageURL) {
+                try {
+                    // For Storage operations, we use ref() from firebase/storage
+                    const storageRef = ref(storage, certificate.imageURL);
+                    
+                    // For Firestore operations, we need to use a document reference from firebase/firestore
+                    // First save the info about the file being deleted
+                    const customDocId = `deleted-certificate-${Date.now()}-${certificate.id || Math.random().toString(36).substring(2, 8)}`;
+
+                    // Use setDoc with a document reference that includes your custom ID
+                    await setDoc(doc(db, "deletedFiles", customDocId), {
+                    storageURL: certificate.imageURL,
+                    deletedAt: serverTimestamp(),
+                    userId: auth.currentUser.uid
+                    });
+                    
+                    // Then delete the file from storage
+                    await deleteObject(storageRef);
+                } catch (error) {
+                    console.error("Error in deletion process:", error);
+                    throw error; // Re-throw so the caller can handle it
+                }
+                }
             // Remove the certificate from the certifications array
             const updatedCertifications = certifications[skill].filter(
                 (cert) => cert.imageURL !== certificate.imageURL || cert.name !== certificate.name

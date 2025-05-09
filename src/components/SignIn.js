@@ -8,41 +8,60 @@ const SignIn = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSignIn = async (e) => {
         e.preventDefault();
+        setError('');
+        
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            // Check both applicants and employers collections
             const applicantDoc = await getDoc(doc(db, 'applicants', user.uid));
             const employerDoc = await getDoc(doc(db, 'employers', user.uid));
             const userDocToBeApproved = await getDoc(doc(db, 'userAccountsToBeApproved', user.uid));
 
+            // Check if account is pending approval
             if (userDocToBeApproved.exists()) {
-                alert('Your account is pending approval. Please wait for admin approval.');
+                setError('Your account is pending approval. Please wait for admin approval.');
                 await signOut(auth);
-                navigate('/');
                 return;
             }
 
+            // Check if account is disabled for applicants
             if (applicantDoc.exists()) {
+                if (applicantDoc.data().disabled) {
+                    setError('Your account has been disabled. Please contact support for assistance.');
+                    await signOut(auth);
+                    return;
+                }
                 navigate('/applicant/profile');
-            } else if (employerDoc.exists()) {
+            } 
+            // Check if account is disabled for employers
+            else if (employerDoc.exists()) {
+                if (employerDoc.data().disabled) {
+                    setError('Your account has been disabled. Please contact support for assistance.');
+                    await signOut(auth);
+                    return;
+                }
                 navigate('/employer/profile');
-            } else {
-                console.error('User type not found in database.');
+            } 
+            else {
+                setError('User type not found in database.');
+                await signOut(auth);
             }
         } catch (error) {
             console.error('Error signing in:', error);
-            alert('Failed to sign in. Please check your email and password.');
+            setError('Failed to sign in. Please check your email and password.');
         }
     };
 
     const handleForgotPassword = async () => {
         if (!email) {
-            alert('Please enter your email to reset your password.');
+            setError('Please enter your email to reset your password.');
             return;
         }
 
@@ -51,15 +70,16 @@ const SignIn = () => {
 
         try {
             await sendPasswordResetEmail(auth, email);
+            setError('');
             alert(`A password reset link has been sent to ${email}. Please check your inbox.`);
         } catch (error) {
             console.error('Error sending password reset email:', error);
             if (error.code === 'auth/user-not-found') {
-                alert('No account found with this email. Please check and try again.');
+                setError('No account found with this email. Please check and try again.');
             } else if (error.code === 'auth/invalid-email') {
-                alert('Invalid email format. Please enter a valid email.');
+                setError('Invalid email format. Please enter a valid email.');
             } else {
-                alert('Failed to send password reset email. Please try again later.');
+                setError('Failed to send password reset email. Please try again later.');
             }
         }
     };
@@ -69,6 +89,21 @@ const SignIn = () => {
             <div className='choicecontainer' style={{ textAlign: 'center', width: '100%', maxWidth: '400px' }}>
                 <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
                     <h2 style={{ fontFamily: "Times New Roman" }}>Log In</h2>
+                    
+                    {error && (
+                        <div style={{ 
+                            color: 'red', 
+                            backgroundColor: '#ffeeee', 
+                            padding: '10px', 
+                            borderRadius: '5px', 
+                            marginBottom: '15px',
+                            width: '100%',
+                            textAlign: 'center'
+                        }}>
+                            {error}
+                        </div>
+                    )}
+                    
                     <input
                         id='email'
                         className='inputs'

@@ -305,7 +305,7 @@
 // export default Portfolio;
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
-import { doc, getDoc, collection, addDoc, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, getDocs, deleteDoc,setDoc,serverTimestamp } from 'firebase/firestore';
 import axios from 'axios';
 
 const Portfolio = () => {
@@ -532,7 +532,19 @@ const Portfolio = () => {
         if (window.confirm("Are you sure you want to delete this submission?")) {
             try {
                 const submissionRef = doc(db, 'applicants', auth.currentUser.uid, 'submissions', submissionId);
-                await deleteDoc(submissionRef);
+                const submissionSnapshot = await getDoc(submissionRef);
+                const userId = auth.currentUser.uid
+                if (submissionSnapshot.exists()) {
+                        // Save the job data to deletedFiles collection
+                        await setDoc(doc(db, "deletedFiles", `deleted-portfolio-submissions-${userId}`), {
+                            submissionData: submissionSnapshot.data(),
+                            deletedAt: serverTimestamp(),
+                            applicantId: userId
+                        });
+                        
+                        // Now delete the original job document
+                        await deleteDoc(submissionRef);
+                    }
                 fetchSubmissions();
             } catch (error) {
                 console.error("Error deleting submission:", error);

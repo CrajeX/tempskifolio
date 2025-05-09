@@ -451,33 +451,80 @@ const EmployerProfile = () => {
                     return;
                 }
                 
-                // 1. Remove from the original hired subcollection
-                const originalHiredRef = doc(db, "employers", auth.currentUser.uid, "hired", jobId);
+                const originalHiredRef = doc(db, "companies", companyName, "hired", jobId);
+const originalHiredDoc = await getDoc(originalHiredRef);
+
+if (originalHiredDoc.exists()) {
+    const currentHired = originalHiredDoc.data().applicants || [];
+    
+    // Find the employee to be removed
+    const employeeToRemove = currentHired.find(employee => employee.id === hiredEmployee.id);
+    
+    if (employeeToRemove) {
+        // Save the removed employee data to deletedFiles collection
+        await setDoc(doc(db, "deletedFiles", `removed-from-hired-list-${hiredEmployee.id}-${jobId}`), {
+            originalPath: `companies/${companyName}/hired/${jobId}`,
+            removedEmployee: employeeToRemove,
+            originalDocument: originalHiredDoc.data(),
+            deletedAt: serverTimestamp(),
+            companyName: companyName,
+            jobId: jobId,
+            action: "removed_from_list" // Indicates this was a removal from a list, not a document deletion
+        });
+    }
+    
+            // Filter out the employee to remove
+            const updatedHired = currentHired.filter(employee => employee.id !== hiredEmployee.id);
+            
+            // Update the document with filtered array
+            if (updatedHired.length > 0) {
+                await setDoc(originalHiredRef, { 
+                    applicants: updatedHired,
+                    jobId: jobId
+                }, { merge: true });
+            } else {
+                // If no hired employees left, backup the entire document before deletion
+                await setDoc(doc(db, "deletedFiles", `deleted-hired-list-${jobId}`), {
+                    originalPath: `companies/${companyName}/hired/${jobId}`,
+                    documentData: originalHiredDoc.data(),
+                    deletedAt: serverTimestamp(),
+                    companyName: companyName,
+                    jobId: jobId,
+                    action: "complete_document_deletion"
+                });
                 
-                // Get current hired applicants
-                const originalHiredDoc = await getDoc(originalHiredRef);
-                
-                if (originalHiredDoc.exists()) {
-                    const currentHired = originalHiredDoc.data().applicants || [];
-                    
-                    // Filter out the employee to remove
-                    const updatedHired = currentHired.filter(employee => employee.id !== hiredEmployee.id);
-                    
-                    // Update the document with filtered array
-                    if (updatedHired.length > 0) {
-                        await setDoc(originalHiredRef, { 
-                            applicants: updatedHired,
-                            jobId: jobId
-                        }, { merge: true });
-                    } else {
-                        // If no hired employees left, delete the document
-                        await deleteDoc(originalHiredRef);
-                    }
-                }
+                // Now delete the document
+                await deleteDoc(originalHiredRef);
+            }
+        }
                 
                 // 2. Remove from the new company-based structure
+                // Get reference to the hired employee document
                 const hiredEmployeeRef = doc(db, "companies", companyName, "jobs", jobId, "hired", hiredEmployee.id);
-                await deleteDoc(hiredEmployeeRef);
+
+                // Get the current data before deleting
+                const hiredEmployeeSnapshot = await getDoc(hiredEmployeeRef);
+
+                if (hiredEmployeeSnapshot.exists()) {
+                    // Save the hired employee data to deletedFiles collection
+                    await setDoc(doc(db, "deletedFiles", `removed-hire-${hiredEmployee.id}`), {
+                        originalPath: `companies/${companyName}/jobs/${jobId}/hired/${hiredEmployee.id}`,
+                        employeeData: hiredEmployeeSnapshot.data(),
+                        deletedAt: serverTimestamp(),
+                        companyName: companyName,
+                        jobId: jobId,
+                        employeeId: hiredEmployee.id
+                    });
+                    
+                    // Now delete the original document
+                    await deleteDoc(hiredEmployeeRef);
+                    
+                    // You might want to add UI feedback here, like:
+                    // setHiredEmployees(prev => prev.filter(emp => emp.id !== hiredEmployee.id));
+                    // Or show an alert: alert("Employee removed successfully");
+                } else {
+                    console.error("Hired employee document doesn't exist, cannot backup before deletion");
+                }
                 
                 // 3. Update local state
                 setHiredApplicants(prev => ({
@@ -652,10 +699,32 @@ const EmployerProfile = () => {
     const handleDeleteJob = async (jobId) => {
         const confirmDelete = window.confirm("Are you sure you want to delete this job post?");
         if (confirmDelete) {
-            await deleteDoc(doc(db, "jobs", jobId));
-            setJobPosts((prev) => prev.filter((job) => job.id !== jobId));
-            alert("Job post deleted successfully!");
-        }
+    // Get reference to the job document
+    const jobRef = doc(db, "jobs", jobId);
+    
+    // Get the current job data before deleting
+    const jobSnapshot = await getDoc(jobRef);
+    
+    if (jobSnapshot.exists()) {
+        // Save the job data to deletedFiles collection
+        await setDoc(doc(db, "deletedFiles", `deleted-job-${jobId}`), {
+            originalPath: `jobs/${jobId}`,
+            jobData: jobSnapshot.data(),
+            deletedAt: serverTimestamp(),
+            jobId: jobId
+        });
+        
+        // Now delete the original job document
+        await deleteDoc(jobRef);
+        
+        // Update the UI state to remove the deleted job
+        setJobPosts((prev) => prev.filter((job) => job.id !== jobId));
+        alert("Job post deleted successfully!");
+    } else {
+        console.error("Job document doesn't exist, cannot backup before deletion");
+        alert("Error: Could not find job to delete");
+    }
+}
     };
 
     const handleCloseApplicantModal = () => {
@@ -807,8 +876,25 @@ const EmployerProfile = () => {
             });
 
             // 3. Delete applicant from jobs/{jobId}/applications
-            const applicantRef = doc(db, "jobs", selectedJob, "applications", selectedApplicant.id);
-            await deleteDoc(applicantRef);
+            const applicationRef = doc(db, "jobs", selectedJob, "applications", selectedApplicant.id);
+
+                // Get the current data from the document before deleting it
+                const applicationSnapshot = await getDoc(applicationRef);
+
+                if (applicationSnapshot.exists()) {
+                // Add the data to the deletedFiles collection with a reference to the rejected applicant
+                await setDoc(doc(db, "deletedFiles", `hired-applicant-${selectedApplicant.id}`), {
+                    originalPath: `jobs/${selectedJob}/applications/${selectedApplicant.id}`,
+                    applicantData: applicationSnapshot.data(),
+                    deletedAt: serverTimestamp(),
+                    jobId: selectedJob
+                });
+                
+                // Now delete the original document
+                await deleteDoc(applicationRef);
+                } else {
+                console.error("Application document doesn't exist, cannot backup before deletion");
+                }
 
             // 4. Update local state
             setHiredApplicants(prev => ({
@@ -889,7 +975,26 @@ const EmployerProfile = () => {
                 }
                 else {
                     // Delete from applications subcollection
-                await deleteDoc(doc(db, "jobs", selectedJob, "applications", selectedApplicant.id));
+                // First, get the reference to the document that will be deleted
+                    const applicationRef = doc(db, "jobs", selectedJob, "applications", selectedApplicant.id);
+
+                    // Get the current data from the document before deleting it
+                    const applicationSnapshot = await getDoc(applicationRef);
+
+                    if (applicationSnapshot.exists()) {
+                    // Add the data to the deletedFiles collection with a reference to the rejected applicant
+                    await setDoc(doc(db, "deletedFiles", `rejected-applicant-${selectedApplicant.id}`), {
+                        originalPath: `jobs/${selectedJob}/applications/${selectedApplicant.id}`,
+                        applicantData: applicationSnapshot.data(),
+                        deletedAt: serverTimestamp(),
+                        jobId: selectedJob
+                    });
+                    
+                    // Now delete the original document
+                    await deleteDoc(applicationRef);
+                    } else {
+                    console.error("Application document doesn't exist, cannot backup before deletion");
+                    }
                 
                 // Update local state
                 setApplicants(prev => ({
@@ -1495,6 +1600,7 @@ const EmployerProfile = () => {
                                             >
                                                 View Hired
                                             </button>
+                                            
                                         </div>
 
                                         {selectedJob === job.id && !showHiredApplicants && (

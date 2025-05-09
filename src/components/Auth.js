@@ -1432,6 +1432,7 @@ const Auth = ({ userType, setUser }) => {
     const [verifying, setVerifying] = useState(false);
     const navigate = useNavigate();
     const [checkboxChecked, setCheckboxChecked] = useState(false);
+    const [error, setError] = useState('');
     
     // State for modal
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
@@ -1496,22 +1497,30 @@ const Auth = ({ userType, setUser }) => {
             setCompanyWebsite('');
         }
     };
-    
+    const rules = [
+        { test: (pwd) => pwd.length >= 8, label: 'At least 8 characters' },
+        { test: (pwd) => /[A-Z]/.test(pwd), label: 'At least one uppercase letter' },
+        { test: (pwd) => /[a-z]/.test(pwd), label: 'At least one lowercase letter' },
+        { test: (pwd) => /\d/.test(pwd), label: 'At least one number' },
+        { test: (pwd) => /[@$!%*?&#^(){}\[\]]/.test(pwd), label: 'At least one special character' },
+    ];
     const handleTermsClick = () => {
         // Display alert before opening terms modal
         alert('Please read our Terms and Conditions carefully before proceeding with registration.\n\nYou must click "I Agree" at the bottom of the terms to enable the checkbox and continue with registration.');
         setIsTermsModalOpen(true);
     };
+      const validatePassword = (pwd) => {
+        return rules.every(rule => rule.test(pwd));
+    };
 
+     const handleChange = (e) => {
+        setPassword(e.target.value);
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
-        if (isSignUp && !agreedToTerms) {
-            alert('Please read and accept the Terms and Conditions before signing up.');
-            return;
-        }
-    
-        try {
+        if (validatePassword(password)) {
+            alert("✅ Password is valid! All rules are met.");
+            try {
             let userCredential;
     
             if (isSignUp) {
@@ -1649,6 +1658,19 @@ const Auth = ({ userType, setUser }) => {
                 alert('An error occurred. Please try again later.');
             }
         }
+        } else {
+            const unmet = rules
+                .filter(rule => !rule.test(password))
+                .map(rule => `• ${rule.label}`)
+                .join('\n');
+            alert(`❌ Invalid password. Please meet the following rules:\n\n${unmet}`);
+        }
+        if (isSignUp && !agreedToTerms) {
+            alert('Please read and accept the Terms and Conditions before signing up.');
+            return;
+        }
+    
+        
     };
     
     const handleForgotPassword = async () => {
@@ -1688,7 +1710,7 @@ const Auth = ({ userType, setUser }) => {
                             type={showPassword ? "text" : "password"}
                             placeholder="Password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={handleChange}
                             required
                             style={{
                                 width: '100%',

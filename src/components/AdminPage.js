@@ -2490,7 +2490,7 @@
 // // </div>
 import React, { useState, useEffect } from "react";
 import { db, storage } from "../firebase";
-import { collection,collectionGroup, getDocs, getDoc, query, where } from "firebase/firestore";
+import { collection,collectionGroup, getDocs, getDoc, query, where,updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import emailjs from "emailjs-com"; // or "@emailjs/browser" depending on your setup
 
@@ -2500,6 +2500,7 @@ import {
   deleteDoc,
   doc,
   addDoc,
+  serverTimestamp
 } from "firebase/firestore";
 import { writeBatch } from "firebase/firestore"; // Import writeBatch
 import { setDoc} from "firebase/firestore";
@@ -2531,7 +2532,8 @@ const AdminPage = () => {
   const [showDashboard, setShowDashboard] = useState(true); // Show Dashboard by default
   const [hiredJobData, setHiredJobData] = useState([]);
   const [showhired, showHiredJobData] = useState(false);
-
+  const [selectedDeletedFile, setSelectedDeletedFile] = useState(null);
+  const [showDataModal, setShowDataModal] = useState(false);
   // const [announcements, setAnnouncements] = useState([]);
   // const [newAnnouncement, setNewAnnouncement] = useState('');
   const [activeTab, setActiveTab] = useState('manageUsers');
@@ -3129,27 +3131,28 @@ console.log("Email:", user.email);
 // Reject User
 const handleRejectUser = async (user) => {
     try {
-        // Move user data to the `deletedFiles` collection
-        await setDoc(doc(db, "deletedFiles", user.id), user);
+        const userId = user.id;
+        const deletedUserRef = doc(db, "deletedFiles", `rejected-user-${userId}`);
 
+        await setDoc(deletedUserRef, {
+            originalPath: `userAccountsToBeApproved/${userId}`,
+            userData: user,
+            deletedAt: serverTimestamp(),
+            userId: userId
+        });
 
-        // Remove user from the approval collection
-        await deleteDoc(doc(db, "userAccountsToBeApproved", user.id));
+        await deleteDoc(doc(db, "userAccountsToBeApproved", userId));
 
-
-        // Update local state
-        setUsersToApprove(usersToApprove.filter((u) => u.id !== user.id));
+        setUsersToApprove(usersToApprove.filter((u) => u.id !== userId));
         alert("User rejected and moved to deleted files.");
 
-
-        await addHistoryRecord('User Rejected', `User ${user.id} rejected.`); // Add history record with timestamp
-
-
+        await addHistoryRecord('User Rejected', `User ${user.username || userId} rejected.`);
     } catch (error) {
         console.error("Error rejecting user:", error);
         alert("Failed to reject user. Please try again.");
     }
 };
+
 
 
   // Fetch Employers
@@ -3362,6 +3365,7 @@ const handleApplicantClick = (applicant) => {
     setIsApplicant(true)
   }
 };
+
 const openHiredModal = (jobData) => {
   // Make sure to load hired job data separately 
   // Load your data here, e.g., from an API call or your data source
@@ -3372,6 +3376,65 @@ const openHiredModal = (jobData) => {
   
   // IMPORTANT: Do not set selectedJob when opening hired modal
 };
+    const handleDeleteJob = async (jobId) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this job post?");
+        if (confirmDelete) {
+    // Get reference to the job document
+    const jobRef = doc(db, "jobs", jobId);
+    
+    // Get the current job data before deleting
+    const jobSnapshot = await getDoc(jobRef);
+    
+    if (jobSnapshot.exists()) {
+        // Save the job data to deletedFiles collection
+        await setDoc(doc(db, "deletedFiles", `deleted-job-${jobId}`), {
+            originalPath: `jobs/${jobId}`,
+            jobData: jobSnapshot.data(),
+            deletedAt: serverTimestamp(),
+            jobId: jobId
+        });
+        
+        // Now delete the original job document
+        await deleteDoc(jobRef);
+        setEmployerJobs((prev) => prev.filter((job) => job.id !== jobId));
+        alert("Job post deleted successfully!");
+    } else {
+        console.error("Job document doesn't exist, cannot backup before deletion");
+        alert("Error: Could not find job to delete");
+    }
+}
+    };
+     const handleToggleUserStatus = async (userId, disableStatus) => {
+    try {
+      // Determine the correct collection based on user type
+      const collectionName = selectedUserType === "Applicants" ? "applicants" : "employers";
+      
+      // Log the action for debugging
+      console.log(`Updating user ${userId} in collection ${collectionName} with disabled status: ${disableStatus}`);
+      
+      // Reference to the user document
+      const userRef = doc(db, collectionName, userId);
+      
+      // Update the disabled status
+      await updateDoc(userRef, {
+        disabled: disableStatus
+      });
+      
+      // Update the local state to reflect changes immediately
+      setSelectedUser(prev => ({
+        ...prev,
+        disabled: disableStatus
+      }));
+      
+      // Show success notification to admin
+      alert(`User account has been ${disableStatus ? "disabled" : "enabled"} successfully.`);
+      
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      alert(`Failed to ${disableStatus ? "disable" : "enable"} user account. Please try again: ${error.message}`);
+    }
+  };
+
 
 const handleHiredApplicantClick = (applicant) => {
   if (selectedHiredApplicant && selectedHiredApplicant.name === applicant.name) {
@@ -4045,221 +4108,243 @@ const handleHiredApplicantClick = (applicant) => {
       {/* Detailed Applicant Modal */}
 
 
-      {selectedUser && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "#fff",
-              padding: "20px",
-              borderRadius: "5px",
-              maxWidth: "600px",
-              width: "90%",
-              maxHeight: "80%",
-              overflowY: "auto",
-            }}
-          >
-            <h4>{selectedUserType === "Applicants" ? "Applicant Details" : ("Employer Details" && selectedUserType !== "JobsToBeApproved")}</h4>
+       {selectedUser && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <div
+      style={{
+        backgroundColor: "#fff",
+        padding: "20px",
+        borderRadius: "5px",
+        maxWidth: "600px",
+        width: "90%",
+        maxHeight: "80%",
+        overflowY: "auto",
+      }}
+    >
+      <h4>{selectedUserType === "Applicants" ? "Applicant Details" : ("Employer Details" && selectedUserType !== "JobsToBeApproved")}</h4>
 
 
-            {selectedUserType === "Applicants" && !isUserClassVisible ? (
-  <>
-
-    <div>
-      <img
-        src={selectedUser.profilePicURL}
-        alt={`${selectedUser.name}'s Profile`}
-        style={{ width: "150px", borderRadius: "50%" }}
-      />
-      <p><strong>Name:</strong> {selectedUser.name}</p>
-      <p><strong>Email:</strong> {selectedUser.email}</p>
-      <p><strong>Experience:</strong> {selectedUser.experience}</p>
-      <p><strong>GitHub:</strong> <a href={selectedUser.githubRepo} target="_blank" rel="noopener noreferrer">{selectedUser.githubRepo}</a></p>
-
-      <h3>Selected Jobs</h3>
-      <ul>
-        {selectedUser.selectedJobs?.map((job, index) => (
-          <li key={index}>{job}</li>
-        ))}
-      </ul>
-
-      <h3>Skills</h3>
-      <ul>
-        {Object.entries(selectedUser.skills || {}).map(([skill, hasSkill]) => (
-          hasSkill ? <li key={skill}>{skill}</li> : null
-        ))}
-      </ul>
-
-      <h3>Certifications</h3>
-
-      {Object.entries(selectedUser.certifications || {}).map(([category, certArray]) => (
-        <div key={category}>
-          <h4>{category}</h4>
-          {certArray.length === 0 ? (
-            <p>No certifications.</p>
-          ) : (
-            certArray.map((cert, index) => (
-              <div key={index} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
-                <img src={cert.imageURL} alt={cert.name} style={{ width: "200px" }} />
-                <p><strong>Name:</strong> {cert.name}</p>
-                <p><strong>Issuer:</strong> {cert.issuer}</p>
-                <p><strong>Issue Date:</strong> {cert.issueDate}</p>
-                <p><strong>Expiry Date:</strong> {cert.expiryDate}</p>
-                <p><strong>Credential ID:</strong> {cert.credentialID}</p>
-              </div>
-            ))
-          )}
-        </div>
-      ))}
-
-      {selectedUser.submissions && selectedUser.submissions.length > 0 && (
+      {selectedUserType === "Applicants" && !isUserClassVisible ? (
         <>
-          <h5>Submissions</h5>
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <img
+                src={selectedUser.profilePicURL}
+                alt={`${selectedUser.name}'s Profile`}
+                style={{ width: "150px", borderRadius: "50%" }}
+              />
+              <div>
+                <p style={{ color: selectedUser.disabled ? "red" : "green", fontWeight: "bold" }}>
+                  Account Status: {selectedUser.disabled ? "Disabled" : "Active"}
+                </p>
+                <button
+                  onClick={() => handleToggleUserStatus(selectedUser.id, !selectedUser.disabled)}
+                  style={{
+                    padding: "5px 10px",
+                    backgroundColor: selectedUser.disabled ? "#28a745" : "#dc3545",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {selectedUser.disabled ? "Enable Account" : "Disable Account"}
+                </button>
+              </div>
+            </div>
+            <p><strong>Name:</strong> {selectedUser.name}</p>
+            <p><strong>Email:</strong> {selectedUser.email}</p>
+            <p><strong>Experience:</strong> {selectedUser.experience}</p>
+            <p><strong>GitHub:</strong> <a href={selectedUser.githubRepo} target="_blank" rel="noopener noreferrer">{selectedUser.githubRepo}</a></p>
+
+            <h3>Selected Jobs</h3>
+            <ul>
+              {selectedUser.selectedJobs?.map((job, index) => (
+                <li key={index}>{job}</li>
+              ))}
+            </ul>
+
+            <h3>Skills</h3>
+            <ul>
+              {Object.entries(selectedUser.skills || {}).map(([skill, hasSkill]) => (
+                hasSkill ? <li key={skill}>{skill}</li> : null
+              ))}
+            </ul>
+
+            <h3>Certifications</h3>
+
+            {Object.entries(selectedUser.certifications || {}).map(([category, certArray]) => (
+              <div key={category}>
+                <h4>{category}</h4>
+                {certArray.length === 0 ? (
+                  <p>No certifications.</p>
+                ) : (
+                  certArray.map((cert, index) => (
+                    <div key={index} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
+                      <img src={cert.imageURL} alt={cert.name} style={{ width: "200px" }} />
+                      <p><strong>Name:</strong> {cert.name}</p>
+                      <p><strong>Issuer:</strong> {cert.issuer}</p>
+                      <p><strong>Issue Date:</strong> {cert.issueDate}</p>
+                      <p><strong>Expiry Date:</strong> {cert.expiryDate}</p>
+                      <p><strong>Credential ID:</strong> {cert.credentialID}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+
+            {selectedUser.submissions && selectedUser.submissions.length > 0 && (
+              <>
+                <h5>Submissions</h5>
+                <ul>
+                  {selectedUser.submissions.map((submission, index) => (
+                    <li key={index}>
+                      <strong>Live Demo:</strong>{" "}
+                      <a href={submission.liveDemoLink} target="_blank" rel="noopener noreferrer">
+                        View
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+
+
+          <div className="user-applications">
+            <h3>Applied Jobs</h3>
+            {appliedJobs.length > 0 ? (
+              <ul>
+                {appliedJobs.map((job, index) => (
+                  <li key={`applied-${job.id || index}`} className="job-item">
+                    <p><strong>Job Title:</strong> {job.title}</p>
+                    <p><strong>Location:</strong> {job.location}</p>
+                    <p><strong>Applied At:</strong> {job.appliedAt?.toDate ? job.appliedAt.toDate().toLocaleString() : "N/A"}</p>
+                    <p><strong>Status:</strong> {job.status}</p>
+                    <p><small>Application ID: {job.applicantId}</small></p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No applied jobs found.</p>
+            )}
+
+            <h3>Hired Jobs</h3>
+            {hiredJobs.length > 0 ? (
+              <ul>
+                {hiredJobs.map((job, index) => (
+                  <li key={`hired-${job.id || index}`} className="job-item">
+                    <p><strong>Job Title:</strong> {job.title}</p>
+                    <p><strong>Location:</strong> {job.location}</p>
+                    <p><strong>Hired By:</strong> {job.companyName}</p>
+                    <p><strong>Hired At:</strong> {job.appliedAt?.toDate ? job.appliedAt.toDate().toLocaleString() : "N/A"}</p>
+                    <p><strong>Status:</strong> {job.status}</p>
+                    <p><small>Application ID: {job.applicantId}</small></p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No hired jobs found.</p>
+            )}
+          </div>
+        </>
+      ) : selectedUserType !== "Applicants" && !isUserClassVisible ? (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <p><strong>Company Name:</strong> {selectedUser.companyName}</p>
+              <p><strong>Email:</strong> {selectedUser.email}</p>
+              <p><strong>Website:</strong> {selectedUser.companyWebsite}</p>
+              <p><strong>Contact-Person:</strong> {selectedUser.contactPerson}</p>
+              <p><strong>Location:</strong> {selectedUser.location}</p>
+              <p><strong>Phone:</strong> {selectedUser.phone}</p>
+            </div>
+            <div>
+              <p style={{ color: selectedUser.disabled ? "red" : "green", fontWeight: "bold" }}>
+                Account Status: {selectedUser.disabled ? "Disabled" : "Active"}
+              </p>
+              <button
+                onClick={() => handleToggleUserStatus(selectedUser.id, !selectedUser.disabled)}
+                style={{
+                  padding: "5px 10px",
+                  backgroundColor: selectedUser.disabled ? "#28a745" : "#dc3545",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              >
+                {selectedUser.disabled ? "Enable Account" : "Disable Account"}
+              </button>
+            </div>
+          </div>
+          <h5>Posted Jobs</h5>
           <ul>
-            {selectedUser.submissions.map((submission, index) => (
+            {employerJobs.map((job, index) => (
               <li key={index}>
-                <strong>Live Demo:</strong>{" "}
-                <a href={submission.liveDemoLink} target="_blank" rel="noopener noreferrer">
-                  View
-                </a>
+                <p><strong>Job Title:</strong> {job.title}</p>
+                <p><strong>Location:</strong> {job.location}</p>
+                <p><strong>Job Role:</strong> {job.jobRole}</p>
+                <p>
+                  <button onClick={() => {
+                    handleJobClick(job.id);
+                    setShowApplicant(true);
+                  }} style={{ cursor: "pointer" }}>
+                    View Applicants
+                  </button>
+                  <button onClick={() => {
+                    handleHiredClick(job);
+                    setShowApplicant(false);
+                  }} style={{ cursor: "pointer" }}>
+                    View Hired
+                  </button>
+                   <button onClick={() => {
+                handleDeleteJob(job.id);
+                // handleOpenHiredModal();
+              }}style={{ cursor: "pointer" }}>
+              Delete Job
+            </button>
+                </p>
               </li>
             ))}
           </ul>
         </>
-      )}
+      ) : null}
+
+      <button
+        onClick={() => {
+          // Clear the hired jobs first
+          setHiredJobs([]);
+          // Then close the modal
+          handleCloseUserModal();
+        }}
+        style={{
+          marginTop: "20px",
+          padding: "10px 15px",
+          backgroundColor: "#007bff",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+      >
+        Close
+      </button>
     </div>
-
-
-    <div className="user-applications">
-      <h3>Applied Jobs</h3>
-      {appliedJobs.length > 0 ? (
-        <ul>
-          {appliedJobs.map((job, index) => (
-            <li key={`applied-${job.id || index}`} className="job-item">
-              <p><strong>Job Title:</strong> {job.title}</p>
-              <p><strong>Location:</strong> {job.location}</p>
-              <p><strong>Applied At:</strong> {job.appliedAt?.toDate ? job.appliedAt.toDate().toLocaleString() : "N/A"}</p>
-              <p><strong>Status:</strong> {job.status}</p>
-              <p><small>Application ID: {job.applicantId}</small></p>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No applied jobs found.</p>
-      )}
-
-      <h3>Hired Jobs</h3>
-      {hiredJobs.length > 0 ? (
-        <ul>
-          {hiredJobs.map((job, index) => (
-            <li key={`hired-${job.id || index}`} className="job-item">
-              <p><strong>Job Title:</strong> {job.title}</p>
-              <p><strong>Location:</strong> {job.location}</p>
-              <p><strong>Hired By:</strong> {job.companyName}</p>
-              <p><strong>Hired At:</strong> {job.appliedAt?.toDate ? job.appliedAt.toDate().toLocaleString() : "N/A"}</p>
-              <p><strong>Status:</strong> {job.status}</p>
-              <p><small>Application ID: {job.applicantId}</small></p>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No hired jobs found.</p>
-      )}
-    </div>
-  </>
-) : selectedUserType !== "Applicants" &&  !isUserClassVisible ? (
-  <>
-    <p>
-      <strong>Company Name:</strong> {selectedUser.companyName}
-    </p>
-    <p>
-      <strong>Email:</strong> {selectedUser.email}
-    </p>
-    <p>
-      <strong>Website:</strong> {selectedUser.companyWebsite}
-    </p>
-    <p>
-      <strong>Contact-Person:</strong> {selectedUser.contactPerson}
-    </p>
-    <p>
-      <strong>Location:</strong> {selectedUser.location}
-    </p>
-    <p>
-      <strong>Phone:</strong> {selectedUser.phone}
-    </p>
-    <h5>Posted Jobs</h5>
-    <ul>
-      {employerJobs.map((job, index) => (
-        <li key={index}>
-          <p>
-            <strong>Job Title:</strong> {job.title}
-          </p>
-          <p>
-            <strong>Location:</strong> {job.location}
-          </p>
-          <p>
-            <strong>Job Role:</strong> {job.jobRole}
-          </p>
-          <p>
-            <button onClick={() => {
-  handleJobClick(job.id);
-  setShowApplicant(true);
-}}
- style={{ cursor: "pointer" }}>
-              View Applicants
-            </button>
-            <button onClick={() => {
-                handleHiredClick(job);
-                setShowApplicant(false);
-                // handleOpenHiredModal();
-              }}style={{ cursor: "pointer" }}>
-              View Hired
-            </button>
-          </p>
-        </li>
-      ))}
-    </ul>
-  </>
-) : null}
-
-
-
-
-           <button
-            onClick={() => {
-              // Clear the hired jobs first
-              setHiredJobs([]);
-              // Then close the modal
-              handleCloseUserModal();
-            }}
-            style={{
-              marginTop: "20px",
-              padding: "10px 15px",
-              backgroundColor: "#007bff",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
-            Close
-          </button>
-          </div>
-        </div>
-      )}
-
-      {/* Inside your modal or component where you're displaying the job applicants */}
+  </div>
+)}
 
 {/* Regular Job Applicants Modal */}
 {selectedJob && !viewingHired && applicantshow &&(
@@ -4851,31 +4936,97 @@ const handleHiredApplicantClick = (applicant) => {
         </div>
     )}
     {/* Archives Section */}
-    {showDeletedFiles && !selectedUserType && !isUserClassVisible && !showDashboard && !historyVisible && !announcementVisible && !viewingReport &&(
-        <div  style={{ border: "1px solid #ddd", borderRadius: "5px", padding: "20px", fontFamily: "Arial, sans-serif" }}>
-            <h3>Deleted Files</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                    <tr>
-                        <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name/Company</th>
-                        <th style={{ border: "1px solid #ddd", padding: "10px" }}>Email</th>
-                        <th style={{ border: "1px solid #ddd", padding: "10px" }}>Type</th>
-                        <th style={{ border: "1px solid #ddd", padding: "10px" }}>Reason</th>
+{showDeletedFiles && !selectedUserType && !isUserClassVisible && !showDashboard && !historyVisible && !announcementVisible && !viewingReport && (
+    <div style={{ border: "1px solid #ddd", borderRadius: "5px", padding: "20px", fontFamily: "Arial, sans-serif" }}>
+        <h3>Deleted Files</h3>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+                <tr>
+                    <th style={{ border: "1px solid #ddd", padding: "10px" }}>File Name</th>
+                    <th style={{ border: "1px solid #ddd", padding: "10px" }}>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {deletedFiles.map((file) => (
+                    <tr key={file.id}>
+                        <td style={{ border: "1px solid #ddd", padding: "10px" }}>{file.id || "N/A"}</td>
+                        <td style={{ border: "1px solid #ddd", padding: "10px" }}>
+                            <button 
+                                onClick={() => {
+                                    setSelectedDeletedFile(file);
+                                    setShowDataModal(true);
+                                }}
+                                style={{ 
+                                    padding: "5px 10px", 
+                                    backgroundColor: "#007bff", 
+                                    color: "white", 
+                                    border: "none", 
+                                    borderRadius: "3px",
+                                    cursor: "pointer"
+                                }}
+                            >
+                                View Data
+                            </button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {deletedFiles.map((file) => (
-                        <tr key={file.id}>
-                            <td style={{ border: "1px solid #ddd", padding: "10px" }}>{file.type === "applicant" ? file.name : file.companyName}</td>
-                            <td style={{ border: "1px solid #ddd", padding: "10px" }}>{file.email}</td>
-                            <td style={{ border: "1px solid #ddd", padding: "10px" }}>{file.type}</td>
-                            <td style={{ border: "1px solid #ddd", padding: "10px" }}>{file.reason || "N/A"}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    )}
+                ))}
+            </tbody>
+        </table>
+        
+        {/* Modal for displaying file data */}
+        {showDataModal && selectedDeletedFile && (
+            <div style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1000
+            }}>
+                <div style={{
+                    backgroundColor: "white",
+                    padding: "20px",
+                    borderRadius: "5px",
+                    maxWidth: "80%",
+                    maxHeight: "80%",
+                    overflowY: "auto"
+                }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
+                        <h3>File: {selectedDeletedFile.id}</h3>
+                        <button 
+                            onClick={() => setShowDataModal(false)}
+                            style={{ 
+                                background: "none", 
+                                border: "none", 
+                                fontSize: "10px",
+                                cursor: "pointer",
+                                color: "black",
+                                borderRadius:"20px"
+                            }}
+                        >
+                            ×
+                        </button>
+                    </div>
+                    
+                    <pre style={{ 
+                        whiteSpace: "pre-wrap", 
+                        backgroundColor: "#f5f5f5", 
+                        padding: "15px",
+                        borderRadius: "5px",
+                        maxHeight: "500px",
+                        overflowY: "auto"
+                    }}>
+                        {JSON.stringify(selectedDeletedFile, null, 2)}
+                    </pre>
+                </div>
+            </div>
+        )}
+    </div>
+)}
 
 
 {/* {historyVisible && !isUserApproval && !showDeletedFiles && !selectedUserType && !isUserClassVisible && !announcementVisible && !showDashboard && (

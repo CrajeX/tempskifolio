@@ -21,6 +21,7 @@
     "emailjs-com": "^3.2.0",
     "express": "^4.21.2",
     "firebase": "^11.4.0",
+    "framer-motion": "^12.10.5",
     "git": "^0.1.5",
     "lucide-react": "^0.508.0",
     "net": "^1.0.2",
