@@ -431,7 +431,18 @@ import React, { useState, useEffect } from 'react';
 import { db, storage, auth } from '../firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { doc, getDoc, updateDoc, arrayRemove, setDoc, collection, addDoc,serverTimestamp } from 'firebase/firestore';
-
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 const ApplicantProfile = () => {
     const [profilePicURL, setProfilePicURL] = useState('');
     const [coverPhotoURL, setCoverPhotoURL] = useState('');
@@ -718,7 +729,12 @@ const ApplicantProfile = () => {
     const InfoPopover = ({ show, onClose, title, content }) => {
         if (!show) return null;
         
-        return (
+return (
+           <AnimatedGroup 
+                    className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+                    baseDelay={0.2}  // Start delay (seconds)
+                    delayIncrement={0.15}  // Each child adds this much delay
+                  >
             <div style={{
                 position: 'absolute',
                 zIndex: 1000,
@@ -781,6 +797,8 @@ const ApplicantProfile = () => {
                     {content}
                 </div>
             </div>
+                </AnimatedGroup>
+        
         );
     };
 
@@ -831,6 +849,11 @@ const ApplicantProfile = () => {
     };
 
     return (
+         <AnimatedGroup 
+                    className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+                    baseDelay={0.2}  // Start delay (seconds)
+                    delayIncrement={0.15}  // Each child adds this much delay
+                  >
         <div id='applicant'>
             <h2>Applicant Profile</h2>
 
@@ -1510,6 +1533,7 @@ const ApplicantProfile = () => {
     </div>
 </div>
 </div>
+</AnimatedGroup>
 );
 };
 

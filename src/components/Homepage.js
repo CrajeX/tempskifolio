@@ -60,6 +60,7 @@
 // export default Homepage;
 import React from "react";
 import { Link } from "react-router-dom";
+import { Headset } from "lucide-react";
 import { motion } from "framer-motion";
 import '../styles.css';
 
@@ -134,6 +135,15 @@ const Homepage = () => {
         >
           Ski-Folio
         </motion.h1>
+        <Link to="/faqhome">
+            <motion.div
+            whileHover={{ scale: 1.2, rotate: 5 }}
+            whileTap={{ scale: 0.95 }}
+            className="cursor-pointer text-blue-600"
+          >
+            <Headset size={28} />
+          </motion.div>
+          </Link>
       </header>
 
       {/* Hero Section */}
@@ -182,6 +192,7 @@ const Homepage = () => {
               Learn More
             </motion.button>
           </Link>
+          
         </motion.div>
       </main>
 

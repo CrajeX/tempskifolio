@@ -533,6 +533,18 @@ import React, { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc, Timestamp,addDoc } from "firebase/firestore";
 import {serverTimestamp } from "firebase/firestore";
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 const JobSearch = () => {
     const [jobs, setJobs] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -1018,6 +1030,11 @@ const JobSearch = () => {
 
 
 return (
+  <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.2}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
   <div style={{ position: "relative" }}>
     <div
       id="job-search-container"
@@ -1120,6 +1137,7 @@ return (
         </div>
 
         <h3>All Jobs</h3>
+        
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
           {filteredJobs.map((job) => (
             <div
@@ -1146,7 +1164,7 @@ return (
               }}
             >
               <div className="job-posting">
-                <h4>{job.title}</h4>
+                <AnimatedHeading >{job.title}</AnimatedHeading>
                 <p><strong>Company:</strong> {job.companyName}</p>
                 <p><strong>Job Role:</strong> {job.jobRole}</p>
                 <p><strong>Location:</strong> {job.location}</p>
@@ -1293,6 +1311,7 @@ return (
       </div>
     )}
   </div>
+  </AnimatedGroup>
 );
 }
 

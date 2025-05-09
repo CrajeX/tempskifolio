@@ -189,7 +189,18 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
-
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 // Import job options from a shared location
 const jobOptions = [
   "Front-end Developer", "Back-end Developer", "Full Stack Developer",
@@ -312,6 +323,11 @@ const EmployerJobPost = () => {
     };
 
     return (
+        <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.2}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
         <div id="job-posting-container" style={{ padding: '20px', maxWidth: '600px', margin: 'auto',marginTop:"90px", borderRadius: "8px" }}>
             <h2>Post a Job</h2>
             <form onSubmit={handleSubmit} style={styles.formContainer}>
@@ -399,6 +415,7 @@ const EmployerJobPost = () => {
             </div>
         </div>
         </div>
+        </AnimatedGroup>
     );
 };
 

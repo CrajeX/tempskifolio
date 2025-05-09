@@ -96,6 +96,7 @@ import EmployerSkillFilter from './components/EmployerSkillFilter';
 import AboutUs from './components/AboutUs';
 import Terms from './components/Terms';
 import FAQ from './components/FAQ';
+import FAQHOME from './components/FAQHOME';
 
 // AnimatedRoutes component to handle transitions
 const AnimatedRoutes = ({ userType, setUserType, user, setUser, handleLogout }) => {
@@ -106,6 +107,7 @@ const AnimatedRoutes = ({ userType, setUserType, user, setUser, handleLogout }) 
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Homepage />} />
         <Route path="/faq" element={<FAQ />} />
+        <Route path="/faqhome" element={<FAQHOME />} />
         <Route path="/select" element={<UserTypeSelection setUserType={setUserType} />} />
         <Route path="/signin" element={<SignIn userType={userType} />} />
         <Route path="/signup" element={<Auth userType={userType} setUser={setUser} />} />

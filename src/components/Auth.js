@@ -1141,6 +1141,18 @@
 // };
 
 // export default Auth;
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 
 import React, { useState,useEffect } from 'react';
 
@@ -1164,6 +1176,11 @@ const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
+    <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.2}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop with click-to-close */}
       <div 
@@ -1194,6 +1211,7 @@ const Modal = ({ isOpen, onClose, children }) => {
         {children}
       </div>
     </div>
+    </AnimatedGroup>
   );
 };
 const Terms = ({ onClose, onAgree }) => {
@@ -1290,11 +1308,16 @@ const Terms = ({ onClose, onAgree }) => {
     }, [currentSection]);
   
     return (
+      <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.2}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
       <div className="w-full max-w-2xl bg-white border border-gray-300">
         {/* Header */}
         <div className="bg-gray-200 p-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold">Terms and Conditions</h3>
+            <AnimatedHeading className="text-xl font-bold">Terms and Conditions</AnimatedHeading>
             <div>
               <span>
                 {currentSection + 1} / {sections.length}
@@ -1317,9 +1340,9 @@ const Terms = ({ onClose, onAgree }) => {
         {/* Content area */}
         <div className="p-4 border-t border-b border-gray-300">
           <div className="bg-white">
-            <h4 className="text-lg font-semibold mb-3 pb-2 border-b border-gray-200">
+            <AnimatedHeading className="text-lg font-semibold mb-3 pb-2 border-b border-gray-200">
               {sections[currentSection].title}
-            </h4>
+            </AnimatedHeading>
             
             <div className="mb-4">
               {sections[currentSection].content}
@@ -1349,7 +1372,7 @@ const Terms = ({ onClose, onAgree }) => {
         {/* Section navigation */}
         <div className="p-2 bg-gray-100 flex justify-center">
           {sections.map((_, index) => (
-            <button
+            <AnimatedButton
               key={index}
               onClick={() => setCurrentSection(index)}
               className={`mx-1 px-2 py-1 ${
@@ -1359,7 +1382,7 @@ const Terms = ({ onClose, onAgree }) => {
               }`}
             >
               {index + 1}
-            </button>
+            </AnimatedButton>
           ))}
         </div>
         
@@ -1413,6 +1436,7 @@ const Terms = ({ onClose, onAgree }) => {
           © 2025 Skifolio. All rights reserved.
         </div>
       </div>
+      </AnimatedGroup>
     );
   };
 // Main Auth Component
@@ -1696,10 +1720,15 @@ const Auth = ({ userType, setUser }) => {
     };
 
     return (
+      <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.2}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
         <div className="hero" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
             <div className="choicecontainer2" style={{ textAlign: 'center', width: '100%', maxWidth: '400px' }}>
                 <form onSubmit={handleSubmit} id="formauth" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                    <h2 style={{ fontFamily: "times new roman" }}>{isSignUp ? 'Sign Up' : 'Sign In'} as {userType}</h2>
+                    <AnimatedHeading style={{ fontFamily: "times new roman" }}>{isSignUp ? 'Sign Up' : 'Sign In'} as {userType}</AnimatedHeading>
 
                     <input className="inputs" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ marginBottom: '10px', width: '100%' }} />
                     
@@ -1879,6 +1908,7 @@ const Auth = ({ userType, setUser }) => {
                 />
             </Modal>
         </div>
+        </AnimatedGroup>
     );
 };
 

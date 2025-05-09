@@ -3,7 +3,18 @@ import { db, auth } from "../firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import "../styles.css";
-
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 const jobOptions = [
   "Front-end Developer", "Back-end Developer", "Full Stack Developer",
   "React Developer", "Vue.js Developer", "Angular Developer",
@@ -109,8 +120,13 @@ const Scouting = () => {
   }
 
   return (
+    <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.2}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
     <div style={{ padding: "20px", textAlign: "center" }}>
-      <h2 style={{ color: "#333" }}>Scouting Visibility</h2>
+      <h2 style={{ color: "#333" ,opacity:"0"}}>Scouting Visibility</h2>
 
       <div className="toggle-container" style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "20px" }}>
@@ -233,6 +249,7 @@ const Scouting = () => {
         </div>
       )}
     </div>
+    </AnimatedGroup>
   );
 };
 

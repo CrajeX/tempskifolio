@@ -307,7 +307,18 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import { doc, getDoc, collection, addDoc, getDocs, deleteDoc,setDoc,serverTimestamp } from 'firebase/firestore';
 import axios from 'axios';
-
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 const Portfolio = () => {
     const [userData, setUserData] = useState(null);
     const [submissions, setSubmissions] = useState([]);
@@ -554,6 +565,11 @@ const Portfolio = () => {
     };
 
     return (
+        <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.2}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
         <div className="portfolio-container">
             <h3 className="section-title">Portfolio</h3>
             {userData && (
@@ -650,6 +666,7 @@ const Portfolio = () => {
                 </div>
             )}
         </div>
+        </AnimatedGroup>
     );
 };
 

@@ -402,6 +402,18 @@ import { onSnapshot } from "firebase/firestore";
 import "../styles.css";
 import { Link } from "react-router-dom";
 import { FaUser, FaBriefcase, FaSearch, FaFileAlt, FaEye, FaBell, FaPlus, FaSignOutAlt } from "react-icons/fa";
+  import PageTemplate, { 
+    AnimatedHeading, 
+    AnimatedParagraph, 
+    AnimatedButton, 
+    AnimatedContainer ,
+    AnimatedAnchor,
+    AnimatedMap,
+    AnimatedImage,
+    AnimatedList,
+    AnimatedListItem,
+    AnimatedGroup
+  } from './PageTemplate';
 const EmployerProfile = () => {
     const [employer, setEmployer] = useState(null);
     const [jobPosts, setJobPosts] = useState([]);
@@ -1056,6 +1068,11 @@ if (originalHiredDoc.exists()) {
   if (!cert) return null;
 
   return (
+    <AnimatedGroup 
+            className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+            baseDelay={0.2}  // Start delay (seconds)
+            delayIncrement={0.15}  // Each child adds this much delay
+          >
     <div style={{
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
@@ -1088,12 +1105,18 @@ if (originalHiredDoc.exists()) {
         <button onClick={onClose} style={{ marginTop: '15px' }}>Close</button>
       </div>
     </div>
+    </AnimatedGroup>
   );
 };
 
       
       
     return (
+        <AnimatedGroup 
+                className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+                baseDelay={0.2}  // Start delay (seconds)
+                delayIncrement={0.15}  // Each child adds this much delay
+              >
         <div className="employer-profile" style={{ 
             maxWidth: "1200px", 
             margin: "0 auto", 
@@ -2758,8 +2781,10 @@ if (originalHiredDoc.exists()) {
 
                 </div>
             </div>
+            
         )}
     </div>
+    </AnimatedGroup>
 );
 };
 

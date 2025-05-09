@@ -3,7 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 const SignIn = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -85,6 +96,11 @@ const SignIn = () => {
     };
 
     return (
+        <AnimatedGroup 
+                className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+                baseDelay={0.2}  // Start delay (seconds)
+                delayIncrement={0.15}  // Each child adds this much delay
+              >
         <div className='hero' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
             <div className='choicecontainer' style={{ textAlign: 'center', width: '100%', maxWidth: '400px' }}>
                 <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
@@ -153,6 +169,7 @@ const SignIn = () => {
                 </form>
             </div>
         </div>
+        </AnimatedGroup>
     );
 };
 

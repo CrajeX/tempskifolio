@@ -1205,7 +1205,18 @@ import { db, auth } from "../firebase";
 import { collection, getDocs, doc, query, updateDoc,getDoc } from "firebase/firestore";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles.css";
-
+import PageTemplate, { 
+  AnimatedHeading, 
+  AnimatedParagraph, 
+  AnimatedButton, 
+  AnimatedContainer ,
+  AnimatedAnchor,
+  AnimatedMap,
+  AnimatedImage,
+  AnimatedList,
+  AnimatedListItem,
+  AnimatedGroup
+} from './PageTemplate';
 
 const NotificationPanel = () => {
   const [notifications, setNotifications] = useState({
@@ -1312,6 +1323,11 @@ const NotificationPanel = () => {
   };
  
   return (
+    <AnimatedGroup 
+        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
+        baseDelay={0.1}  // Start delay (seconds)
+        delayIncrement={0.15}  // Each child adds this much delay
+      >
     <div className="notification-page">
       <div className="notification-top">
         <h2 style={{ margin: "25px" }}>Notifications</h2>
@@ -1422,6 +1438,7 @@ const NotificationPanel = () => {
         </div>
       </div>
     </div>
+    </AnimatedGroup>
   );
 };
 
