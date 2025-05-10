@@ -1046,6 +1046,24 @@ if (originalHiredDoc.exists()) {
             }
         }
     };
+    const handleOpenJob = async (jobId) => {
+        const confirmOpen = window.confirm("Are you sure you want to open this job post? It will be visible to applicants.");
+        if (confirmOpen) {
+            try {
+                await updateDoc(doc(db, "jobs", jobId), { status: "open" });
+                
+                // Update local state
+                setJobPosts(prev => prev.map(job => 
+                    job.id === jobId ? { ...job, status: "open" } : job
+                ));
+                
+                alert("Job post has been opened.");
+            } catch (error) {
+                console.error("Error closing job:", error);
+                alert("Failed to close job. Please try again.");
+            }
+        }
+    };
 
     const toggleHiredApplicants = (jobId) => {
         setSelectedJob(jobId);
@@ -1661,6 +1679,19 @@ if (originalHiredDoc.exists()) {
                                                         Closed
                                                     </span>
                                                 )}
+                                                {job.status === "open" && (
+                                                    <span style={{ 
+                                                        color: "white", 
+                                                        fontSize: "14px", 
+                                                        fontWeight: "normal", 
+                                                        marginLeft: "10px",
+                                                        padding: "3px 8px",
+                                                        backgroundColor: "#73f071",
+                                                        borderRadius: "4px"
+                                                    }}>
+                                                        Active
+                                                    </span>
+                                                )}
                                             </h4>
                                             <div style={{ display: "flex", gap: "10px" }}>
                                                 <button 
@@ -1677,6 +1708,21 @@ if (originalHiredDoc.exists()) {
                                                     }}
                                                 >
                                                     Close Job
+                                                </button>
+                                                  <button 
+                                                    onClick={() => handleOpenJob(job.id)} 
+                                                    disabled={job.status != "closed"}
+                                                    style={{
+                                                        padding: "5px 10px",
+                                                        backgroundColor: job.status === "closed" ? "#2ecc71" : "#cccccc",
+                                                        color: "#fff",
+                                                        border: "none",
+                                                        borderRadius: "4px",    
+                                                        cursor: job.status === "closed" ? "pointer" : "not-allowed",
+                                                        fontSize: "12px"
+                                                    }}
+                                                >
+                                                    Open Job
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteJob(job.id)}

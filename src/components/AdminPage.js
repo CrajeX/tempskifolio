@@ -2534,6 +2534,7 @@ const AdminPage = () => {
   const [showhired, showHiredJobData] = useState(false);
   const [selectedDeletedFile, setSelectedDeletedFile] = useState(null);
   const [showDataModal, setShowDataModal] = useState(false);
+  const [jobsApproved, setjobsApproved] = useState(false);
   // const [announcements, setAnnouncements] = useState([]);
   // const [newAnnouncement, setNewAnnouncement] = useState('');
   const [activeTab, setActiveTab] = useState('manageUsers');
@@ -3466,31 +3467,58 @@ const handleHiredApplicantClick = (applicant) => {
   const handleOpenHiredModal = () => {
     showHiredJobData(false);
   };
-  const handlePublishJob = async (job) => {
-    try {
-      // Add job to the 'jobs' collection
-      await setDoc(doc(db, "jobs", job.id), job);
+const handlePublishJob = async (job) => {
+  try {
+    // Add job to the 'jobs' collection with status set to 'open'
+    const updatedJob = { ...job, status: "open" };
+    await setDoc(doc(db, "jobs", job.id), updatedJob);
 
+    // Update local jobs state
+    setJobs(prev =>
+      prev.map(j =>
+        j.id === job.id ? updatedJob : j
+      )
+    );
 
-      // Delete job from 'jobs-to-be-approved'
-      await deleteDoc(doc(db, "jobs-to-be-approved", job.id));
+    // Delete job from 'jobs-to-be-approved'
+    await deleteDoc(doc(db, "jobs-to-be-approved", job.id));
 
+    // Update local state for pending jobs and selection
+    setPendingJobs(prev => prev.filter(j => j.id !== job.id));
+    setSelectedJob(null);
+    
+    // Log success and add to history
+    alert("Job published successfully.");
+    const employerId = job.employerId; // Target employer ID
 
-      // Update local state
-      setPendingJobs(pendingJobs.filter((j) => j.id !== job.id));
-      setSelectedJob(null);
-      alert("Job published successfully.");
+      const emailContent = `
+        Your Job Named ${job.title} have been approved
+      `;
+      const emailSubject = `
+        Job Approval
+      `;
 
+      const timestamp = Date.now();
+      const notificationsRef = collection(db, `employers/${employerId}/notifications`);
+      const docId = `notification_${timestamp}`;
 
-      await addHistoryRecord('Job Published', `Job post #${job.id} published.`); // Add history record with timestamp
+      const newNotification = {
+        subject: emailSubject,
+        message: emailContent,
+        timestamp: new Date(),
+        status: "unread",
+      };
 
+      await setDoc(doc(notificationsRef, docId), newNotification);
+    await addHistoryRecord('Job Published', `Job post #${job.id} published.`);
 
-    } catch (error) {
-      console.error("Error publishing job:", error);
-      alert("Failed to publish job. Please try again.");
-    }
-  };
-  const handleRejectJob = async (jobId) => {
+  } catch (error) {
+    console.error("Error publishing job:", error);
+    alert("Failed to publish job. Please try again.");
+  }
+};
+
+  const handleRejectJob = async (jobId,job) => {
     try {
       setIsApplicant(true)
       // Delete job from 'jobs-to-be-approved'
@@ -3501,8 +3529,28 @@ const handleHiredApplicantClick = (applicant) => {
       setPendingJobs(pendingJobs.filter((j) => j.id !== jobId));
       setSelectedJob(null);
       alert("Job rejected successfully.");
+      
+      const employerId = job.employerId; // Target employer ID
 
+      const emailContent = `
+        Your Job Named ${job.title} have been disapproved. Please read our terms for uploading jobs in the FAQ window
+      `;
+      const emailSubject = `
+        Job Approval
+      `;
 
+      const timestamp = Date.now();
+      const notificationsRef = collection(db, `employers/${employerId}/notifications`);
+      const docId = `notification_${timestamp}`;
+
+      const newNotification = {
+        subject: emailSubject,
+        message: emailContent,
+        timestamp: new Date(),
+        status: "unread",
+      };
+
+      await setDoc(doc(notificationsRef, docId), newNotification);
       await addHistoryRecord('Job Post Rejected',  `Job post #${jobId} rejected.` );
     } catch (error) {
       console.error("Error rejecting job:", error);
@@ -3757,6 +3805,7 @@ const handleHiredApplicantClick = (applicant) => {
         setShowAnnouncement(false);
         setViewingReport(false);
         setShowApplicant(true);
+        setjobsApproved(false);
       }}
       style={{
         display: "block",
@@ -3827,7 +3876,12 @@ const handleHiredApplicantClick = (applicant) => {
 
 
     <button
-      onClick={handleToggleClass}
+      onClick={() => {
+        handleToggleClass();
+        setjobsApproved(true);
+      }}
+
+      
       style={{
         display: "block",
         width: "100%",
@@ -4302,6 +4356,7 @@ const handleHiredApplicantClick = (applicant) => {
                   <button onClick={() => {
                     handleJobClick(job.id);
                     setShowApplicant(true);
+                    setjobsApproved(false);
                   }} style={{ cursor: "pointer" }}>
                     View Applicants
                   </button>
@@ -4348,7 +4403,7 @@ const handleHiredApplicantClick = (applicant) => {
 )}
 
 {/* Regular Job Applicants Modal */}
-{selectedJob && !viewingHired && applicantshow &&(
+{selectedJob && !viewingHired && applicantshow &&jobsApproved == false &&(
   <div
     style={{
       position: "fixed",
@@ -4397,7 +4452,7 @@ const handleHiredApplicantClick = (applicant) => {
       {/* Regular Job Applicants Section */}
       <h4>Job Applicants</h4>
       <ul>
-        {jobApplicants.map((applicant, index) => (
+        {applicantshow == true && jobsApproved == false &&jobApplicants.map((applicant, index) => (
           <li key={index}>
             <p>
               <strong>Name:</strong> {applicant.name}
@@ -4781,7 +4836,7 @@ const handleHiredApplicantClick = (applicant) => {
                       View
                     </button>
                     <button
-                      onClick={() => handleRejectJob(job.id)}
+                      onClick={() => handleRejectJob(job.id,job)}
                       style={{
                         padding: "5px 10px",
                         backgroundColor: "#ff4d4d",
@@ -4847,6 +4902,7 @@ const handleHiredApplicantClick = (applicant) => {
                   onClick={() => {
                     handlePublishJob(selectedJob);
                     setSelectedJob(null);
+                 
                   }}
                   style={{
                     padding: "10px 20px",

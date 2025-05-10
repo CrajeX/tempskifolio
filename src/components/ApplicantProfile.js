@@ -660,6 +660,8 @@ const ApplicantProfile = () => {
     };
 
     const archiveFile = async (type, skill, certificate) => {
+         const customDocId = `deleted-file-${Date.now()}-${certificate.id || Math.random().toString(36).substring(2, 8)}`;
+
         const archivedData = {
             applicantId: auth.currentUser.uid,
             type,
@@ -668,7 +670,10 @@ const ApplicantProfile = () => {
             deletedAt: new Date(),
         };
         try {
-            await addDoc(collection(db, 'deletedFiles'), archivedData);
+            await setDoc(doc(db, "deletedFiles", customDocId), {
+                    deletedAt: serverTimestamp(),
+                    userId: auth.currentUser.uid
+                    });
         } catch (error) {
             console.error("Error archiving file:", error);
         }

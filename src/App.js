@@ -95,6 +95,7 @@ import Scouting from './components/Scouting';
 import EmployerSkillFilter from './components/EmployerSkillFilter';
 import AboutUs from './components/AboutUs';
 import Terms from './components/Terms';
+import TermsAndCondition from './components/TermsAndCondition';
 import FAQ from './components/FAQ';
 import FAQHOME from './components/FAQHOME';
 
@@ -123,6 +124,7 @@ const AnimatedRoutes = ({ userType, setUserType, user, setUser, handleLogout }) 
         <Route path="/filter" element={<EmployerSkillFilter />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/condition" element={<TermsAndCondition />} />
       </Routes>
     </AnimatePresence>
   );

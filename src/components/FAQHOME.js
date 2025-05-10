@@ -901,46 +901,76 @@ return (
 
 const FAQHOME = ({ userType = "applicant" }) => {
   const applicantFaqs = [
-    {
-      question: "How do I create an account?",
-      answer: "Click Sign Up and choose Applicant. Fill in your details to register.",
-      category: "Account"
-    },
-    {
-      question: "How do I apply for a job?",
-      answer: "Use the 'Search Jobs' feature to browse listings and apply with your portfolio.",
-      category: "Jobs"
-    },
-    {
-      question: "How do I update my profile?",
-      answer: "Go to the 'Profile' page from the navigation bar and click edit.",
-      category: "Account"
-    },
-    {
-      question: "What is 'Get Discovered'?",
-      answer: "This feature boosts your visibility to employers based on your skills.",
-      category: "Features"
-    },
-    {
-      question: "How do I register as an employer?",
-      answer: "Click Sign Up and choose Employer. Fill out your company and contact info.",
-      category: "Account"
-    },
-    {
-      question: "How do I post a job?",
-      answer: "Navigate to the 'Post Job' section and fill in the job posting form.",
-      category: "Jobs"
-    },
-    {
-      question: "How do I filter applicants?",
-      answer: "Go to 'Discover' and use the skill-based filters to find ideal candidates.",
-      category: "Features"
-    },
-    {
-      question: "How do notifications work?",
-      answer: "You'll be alerted when an applicant interacts with your job post.",
-      category: "Features"
-    },
+   {
+    question: "What is Ski-Folio?",
+    answer: "A Job Market website that connects you with opportunities.",
+    category: "Account"
+  },
+  {
+    question: "How do I apply for a job?",
+    answer: "Use the 'Search Jobs' feature to browse listings and apply with your portfolio.",
+    category: "Jobs"
+  },
+  {
+    question: "How do I update my profile?",
+    answer: "Go to the 'Profile' page from the navigation bar and click edit.",
+    category: "Account"
+  },
+  {
+    question: "What is 'Get Discovered'?",
+    answer: "This feature boosts your visibility to employers based on your skills.",
+    category: "Features"
+  },
+  {
+    question: "How do I register as an employer?",
+    answer: "Click Sign Up and choose Employer. Fill out your company and contact info.",
+    category: "Account"
+  },
+  {
+    question: "How do I post a job?",
+    answer: "Navigate to the 'Post Job' section and fill in the job posting form.",
+    category: "Jobs"
+  },
+  {
+    question: "How do I filter applicants?",
+    answer: "Go to 'Discover' and use the skill-based filters to find ideal candidates.",
+    category: "Features"
+  },
+  {
+    question: "How do notifications work?",
+    answer: "You'll be alerted when an applicant interacts with your job post or an announcement had been posted by the admins",
+    category: "Features"
+  },
+  {
+    question: "What is the 'Highest Eligible Jobs' section?",
+    answer: "It shows the top job matches based on your most relevant skills.",
+    category: "Features"
+  },
+  {
+    question: "How do I manage applications I receive?",
+    answer: "Employers can view all applications under each job post in 'My Jobs'.",
+    category: "Jobs"
+  },
+  {
+    question: "How is my average score calculated?",
+    answer: "It's a dynamic score showing how well you match posted job skills.",
+    category: "Features"
+  },
+  {
+    question: "How do I contact applicants?",
+    answer: "Once someone applies, you'll see their details and can send an invite for a meeting.",
+    category: "Jobs"
+  },
+  {
+    question: "What skills should I add?",
+    answer: "Add relevant, in-demand skills to boost your job match and discovery chances.",
+    category: "Account"
+  },
+  {
+    question: "Can employers view my entire portfolio?",
+    answer: "Yes, once you apply, your full profile and attached portfolio become visible.",
+    category: "Account"
+  },
   ];
 
   const employerFaqs = [];

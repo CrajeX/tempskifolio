@@ -882,6 +882,7 @@ const EmployerSkillFilter = () => {
         reason: reportReason,
         details: reportDetails,
         status: "pending", // pending, reviewed, resolved
+        violationType:reportReason,
         createdAt: serverTimestamp(),
         relatedSkills: selectedSkills, // Include the skills that were used to filter
       });

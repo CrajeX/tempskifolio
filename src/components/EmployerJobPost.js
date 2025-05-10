@@ -290,37 +290,38 @@ const EmployerJobPost = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const jobId = `job_${Date.now()}`;
-            const jobRef = doc(db, 'jobs-to-be-approved', jobId);
+    e.preventDefault();
+    try {
+        const jobId = `job_${Date.now()}`;
+        const jobRef = doc(db, 'jobs-to-be-approved', jobId);
 
-            await setDoc(jobRef, {
-                id: jobId,
-                title,
-                description,
-                location,
-                jobRole, // Add the job role to the document
-                averageScore,
-                createdAt: new Date(),
-                employerId: user?.uid,
-                companyName,
-                jobRole,
-                status: 'pending',
-            });
+        await setDoc(jobRef, {
+            id: jobId,
+            title,
+            description,
+            location,
+            jobRole,
+            averageScore,
+            createdAt: new Date(),
+            employerId: user?.uid || null,
+            companyName,
+            status: 'pending',
+        });
 
-            // Clear form after submission
-            setTitle('');
-            setDescription('');
-            setLocation('');
-            setJobRole('');
-            setAverageScore(50);
-            alert('Job posted successfully and is awaiting approval!');
-        } catch (error) {
-            console.error('Error posting job:', error);
-            alert('Failed to post the job. Please try again.');
-        }
-    };
+        // Clear form after submission
+        setTitle('');
+        setDescription('');
+        setLocation('');
+        setJobRole('');
+        setAverageScore(50);
+
+        alert('Job posted successfully and is awaiting approval!');
+    } catch (error) {
+        console.error('Error posting job:', error);
+        alert('Failed to post the job. Please try again.');
+    }
+};
+
 
     return (
        <AnimatedGroup 

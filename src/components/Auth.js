@@ -1153,7 +1153,8 @@ import PageTemplate, {
   AnimatedListItem,
   AnimatedGroup
 } from './PageTemplate';
-
+import { BadgeInfoIcon } from "lucide-react";
+import { motion } from "framer-motion";
 import React, { useState,useEffect } from 'react';
 
 
@@ -1270,13 +1271,24 @@ const Terms = ({ onClose, onAgree }) => {
         title: "10. Changes to Terms",
         content: "We may revise these Terms at any time. Continued use of Skifolio constitutes acceptance of the updated terms. We encourage users to review this page regularly."
       },
+      
       {
-        title: "11. Contact Us",
+  title: "11. Job Posting Rules",
+  content: "Employers are expected to follow these guidelines when posting jobs to ensure fairness, clarity, and compliance:",
+  list: [
+    "Job posts must include accurate titles, descriptions, qualifications, and company details.",
+    "Posts that contain discriminatory language or violate labor laws are strictly prohibited.",
+    "Salaries or compensation should be transparent and not misleading.",
+    "Spam, duplicate postings, or unrelated job content is not allowed.",
+    "Skifolio reserves the right to remove any job listing that does not meet these standards without prior notice."
+  ]
+},{
+        title: "12. Contact Us",
         content: "For questions or concerns regarding these Terms, please contact us at support@skifolio.com.",
         hasEmail: true
-      }
+      },
     ];
-  
+
     // Check if on the final slide
     const isLastSection = currentSection === sections.length - 1;
     
@@ -1306,7 +1318,7 @@ const Terms = ({ onClose, onAgree }) => {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentSection]);
-  
+    
     return (
       <AnimatedGroup 
         className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
@@ -1370,7 +1382,7 @@ const Terms = ({ onClose, onAgree }) => {
         </div>
         
         {/* Section navigation */}
-        <div className="p-2 bg-gray-100 flex justify-center">
+        {/* <div className="p-2 bg-gray-100 flex justify-center">
           {sections.map((_, index) => (
             <AnimatedButton
               key={index}
@@ -1384,7 +1396,7 @@ const Terms = ({ onClose, onAgree }) => {
               {index + 1}
             </AnimatedButton>
           ))}
-        </div>
+        </div> */}
         
         {/* Navigation buttons */}
         <div className="flex justify-between p-3 bg-gray-100 border-t border-gray-300">
@@ -1441,6 +1453,7 @@ const Terms = ({ onClose, onAgree }) => {
   };
 // Main Auth Component
 const Auth = ({ userType, setUser }) => {
+  
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -1457,6 +1470,8 @@ const Auth = ({ userType, setUser }) => {
     const navigate = useNavigate();
     const [checkboxChecked, setCheckboxChecked] = useState(false);
     const [error, setError] = useState('');
+    const [showModal, setShowModal] = useState(false);
+
     
     // State for modal
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
@@ -1806,15 +1821,21 @@ const Auth = ({ userType, setUser }) => {
                         <>
                             <input className="inputs" type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required style={{ marginBottom: '10px', width: '100%' }} />
                             <input className="inputs" type="text" placeholder="GitHub Repository URL" value={githubRepo} onChange={(e) => setGithubRepo(e.target.value)} required style={{ marginBottom: '10px', width: '100%' }} />
+
+                              <motion.div
+                                  whileHover={{ scale: 1.2, rotate: 2 }}
+                                  onClick={() => setShowModal(true)}
+                                  className="cursor-pointer text-blue-600"
+                                >
+                                  
+                                  <BadgeInfoIcon size={50}className="text-blue-600" />
+                              
+                                </motion.div>
                             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
                             <div style={{ width: '100%', marginBottom: '10px', position: 'relative' }}>
-                                <span className="tooltip-exclamation">!</span>
-                                <div className="tooltip-text">
-                                    Please enter the full URL to your GitHub repository.<br />
-                                    Example: <code>https://github.com/username/repository-name</code><br /><br />
-                                    This is required so the system can access your portfolio for scoring.
-                                </div>
-                                <strong style={{ marginLeft: '10px' }}>GitHub Repository URL</strong>
+                               
+                               
+                                <strong style={{ marginLeft: '-0.5rem' }}>What to upload</strong>
                             </div>
                         </div>
                         </>
@@ -1828,7 +1849,7 @@ const Auth = ({ userType, setUser }) => {
                     )}
 
                     {isSignUp && (
-                        <div style={{ marginBottom: '20px', width: '100%', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
+                        <div style={{ marginBottom: '20px', width: '100%', display: 'flex', alignItems: 'flex-start', flexDirection: 'row' }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start' }}>
                                 <input 
                                     type="checkbox" 
@@ -1837,7 +1858,8 @@ const Auth = ({ userType, setUser }) => {
                                     readOnly
                                     title="You must read and agree to the Terms and Conditions first"
                                     style={{ 
-                                        marginRight: '8px', 
+                                        marginRight: '1.5rem', 
+                                        width:'2rem',
                                         marginTop: '4px',
                                         cursor: 'not-allowed', // Changes cursor to indicate it's not clickable
                                         opacity: checkboxChecked ? '1' : '0.6' // Makes it look disabled when not checked
@@ -1899,6 +1921,56 @@ const Auth = ({ userType, setUser }) => {
                     )}
                 </form>
             </div>
+                     {showModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: 'white',
+              padding: '20px',
+              borderRadius: '8px',
+              maxWidth: '400px',
+              textAlign: 'center',
+            }}
+          >
+            <h3>Repository Commit Requirement</h3>
+            <p>
+              The repository must have at least one commit.<br />
+              Commits must be made using a Gmail account that is <strong>not</strong> a <em>noReply</em> or <em>anonymous</em> address.<br></br>
+              If you dont know how <br></br><strong>Watch this two videos</strong> <br>
+              </br>
+              <strong><a href='https://youtu.be/RT-1Zywrse8?si=VLHuxtbkPgmzuq5h' target='_blank'>Set User name and Email</a></strong><br></br>
+              <strong><a href='https://youtu.be/JB7YD7OKm5g?si=XKFZDhvn9-T5EOdd' target='_blank'>Commit to github</a></strong>
+            </p>
+            <button
+              onClick={() => setShowModal(false)}
+              style={{
+                marginTop: '15px',
+                padding: '8px 16px',
+                background: '#007BFF',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
 
             {/* Terms Modal */}
             <Modal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)}>

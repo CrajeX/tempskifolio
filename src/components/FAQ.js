@@ -102,7 +102,7 @@
 
 // export default FAQ;
 import React, { useState } from "react";
-import { Mail, Phone, HelpCircle, ChevronDown, Search } from "lucide-react";
+import { Mail, Phone, HelpCircle, ChevronDown, Search, Link ,TerminalSquare} from "lucide-react";
 import PageTemplate, { 
   AnimatedHeading, 
   AnimatedParagraph, 
@@ -119,45 +119,71 @@ const FAQ = ({ userType = "applicant" }) => {
   const applicantFaqs = [
     {
       question: "How do I create an account?",
-      answer: "Click Sign Up and choose Applicant. Fill in your details to register.",
+      answer: "If you are looking for a job, then choose Applicant. Fill in the details that are needed to create your account and wait for E-mail verification and for the admin to completely verify your account. Remember that having your own GitHub account and repository is needed for account creation",
       category: "Account"
     },
     {
       question: "How do I apply for a job?",
-      answer: "Use the 'Search Jobs' feature to browse listings and apply with your portfolio.",
+      answer: "Use the 'Search Jobs' feature to browse listings and apply with your portfolio. In order for us to recommend you jobs that are highly applicable, submit a live demo of your code so that our system will grade it based on the contents and the score will act as a guide for employers to see if you are fit for the job.",
       category: "Jobs"
     },
     {
       question: "How do I update my profile?",
-      answer: "Go to the 'Profile' page from the navigation bar and click edit.",
+      answer: "Go to the 'Profile' page from the navigation bar and click parts of your profile that you wanted to change. Visual indicators are added so that you can find what are the things you can change.",
       category: "Account"
     },
     {
       question: "What is 'Get Discovered'?",
-      answer: "This feature boosts your visibility to employers based on your skills.",
+      answer: "By allowing this feature, it allows you to be seen by an employer based on the roles that you have picked. This boosts your chances of having a job as they are looking for specific roles outside of job posts. Give it a try and let yourself be seen",
       category: "Features"
     },
-  ];
-
-  const employerFaqs = [
-    {
+     {
       question: "How do I register as an employer?",
-      answer: "Click Sign Up and choose Employer. Fill out your company and contact info.",
+      answer: " Click Sign Up and choose Employer. Fill out your company details and contact info. wait for E-mail verification and for the admin to completely verify your account",
       category: "Account"
     },
     {
       question: "How do I post a job?",
-      answer: "Navigate to the 'Post Job' section and fill in the job posting form.",
+      answer: "Navigate to the 'Post Job' section and fill in the job posting form. For more detailed explanation of how the scoring works, read the description below.",
       category: "Jobs"
     },
     {
       question: "How do I filter applicants?",
-      answer: "Go to 'Discover' and use the skill-based filters to find ideal candidates.",
+      answer: "If you want to handpick applicants rather than posting a job, go to 'Discover' and use the skill-based filters to find ideal candidates.",
       category: "Features"
     },
     {
       question: "How do notifications work?",
-      answer: "You'll be alerted when an applicant interacts with your job post.",
+      answer: "If you are an applicant, you will see if the employer accepted your application as the system will notify you about it. When an applicant applied to your job post, you will be alerted and will show what job post they have interacted in. Admin announcements will also be seen in the notification tab.",
+      category: "Features"
+    },
+  
+  ];
+
+  const employerFaqs = [
+    {
+          question: "How do I update my profile?",
+      answer: "Go to the 'Profile' page from the navigation bar and click parts of your profile that you wanted to change. Visual indicators are added so that you can find what are the things you can change.",
+      category: "Account"
+    },
+    {
+      question: "What is 'Discover'?",
+      answer: "This feature allows you to look for potential applicants by selecting roles that you are looking for. You can use the filter function to properly search for applicants that you need.",
+      category: "Features"
+    },
+     {
+      question: "If we accepted an applicant are they already hired?",
+      answer: "Ski-folio is only a job-matching website, it is still up to the management on how will they accept applicants through our website. It is still recommended for the applicants to go under screening to know if they are appropriate for your company",
+      category: "Jobs"
+    },
+    {
+      question: "How do I post a job?",
+      answer: "Navigate to the 'Post Job' section and fill in the job posting form, from the job roles that you needed, title, proper job description, location, and average score that you are looking for. For more detailed explanation of how the scoring works, read the description below. Keep in mind to post appropriately as violators might be blacklisted in the website",
+      category: "Jobs"
+    },
+    {
+      question: "How do notifications work?",
+      answer: "You will see if an applicant have submitted their application in your job post and the website will notify you about it. Admin announcements will also be seen as 'News' in the notification tab.",
       category: "Features"
     },
   ];
@@ -301,7 +327,27 @@ const FAQ = ({ userType = "applicant" }) => {
               <p className="skifolio-contact-type">Phone Support</p>
               <p className="skifolio-contact-value">(+63) 977 096 0443</p>
             </div>
+
           </a>
+
+          <a
+            className="folio-link-card"
+            href="/Skifolio Terms and Conditions.pdf"
+            download="Skifolio_Terms_and_Conditions.pdf"
+          >
+            <div className="folio-icon-container">
+              <TerminalSquare className="folio-icon" />
+            </div>
+            <div className="folio-text-content">
+              <p className="folio-title">Terms and Conditions</p>
+              <p className="folio-subtext">Ski-folio's terms and conditions</p>
+            </div>
+          </a>
+
+          
+
+            
+          
         </div>
       </div>
       
@@ -588,6 +634,67 @@ const FAQ = ({ userType = "applicant" }) => {
           color: #6b7280;
           margin: 0;
         }
+          Link{
+           display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+          }
+          .folio-link-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+          }
+
+          .folio-link-card:hover {
+            border-color: #a5b4fc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          }
+
+          .folio-icon-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            background-color: #e0e7ff;
+            border-radius: 9999px;
+          }
+
+          .folio-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #4f46e5;
+          }
+
+          .folio-text-content {
+            flex: 1;
+          }
+
+          .folio-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #1f2937;
+            margin: 0 0 0.25rem 0;
+          }
+
+.folio-subtext {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+}
+
       `}</style>
       
     </div>

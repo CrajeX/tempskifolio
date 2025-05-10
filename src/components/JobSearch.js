@@ -726,27 +726,27 @@ const JobSearch = () => {
           createdAt: serverTimestamp(),
         });
         
-        // Also create a subcollection of reports within the job document
-        const jobReportRef = collection(db, "jobs", expandedJob.id, "reports");
-        await addDoc(jobReportRef, {
-          reportedBy: userId,
-          reason: reportReason,
-          details: reportDetails,
-          status: "pending",
-          createdAt: serverTimestamp(),
-        });
+        // // Also create a subcollection of reports within the job document
+        // const jobReportRef = collection(db, "jobs", expandedJob.id, "reports");
+        // await addDoc(jobReportRef, {
+        //   reportedBy: userId,
+        //   reason: reportReason,
+        //   details: reportDetails,
+        //   status: "pending",
+        //   createdAt: serverTimestamp(),
+        // });
         
-        // Notify admin about the report
-        const adminNotificationsRef = collection(db, "admin_notifications");
-        await addDoc(adminNotificationsRef, {
-          type: "job_report",
-          jobId: expandedJob.id,
-          jobTitle: expandedJob.title,
-          companyName: expandedJob.companyName,
-          reportReason: reportReason,
-          reportedAt: serverTimestamp(),
-          status: "unread",
-        });
+        // // Notify admin about the report
+        // const adminNotificationsRef = collection(db, "admin_notifications");
+        // await addDoc(adminNotificationsRef, {
+        //   type: "job_report",
+        //   jobId: expandedJob.id,
+        //   jobTitle: expandedJob.title,
+        //   companyName: expandedJob.companyName,
+        //   reportReason: reportReason,
+        //   reportedAt: serverTimestamp(),
+        //   status: "unread",
+        // });
         
         alert("Thank you for your report. Our team will review it shortly.");
         setShowReportForm(false);
