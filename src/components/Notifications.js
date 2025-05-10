@@ -1323,122 +1323,344 @@ const NotificationPanel = () => {
   };
  
   return (
-    <AnimatedGroup 
-        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
-        baseDelay={0.1}  // Start delay (seconds)
-        delayIncrement={0.15}  // Each child adds this much delay
-      >
-    <div className="notification-page">
-      <div className="notification-top">
-        <h2 style={{ margin: "25px" }}>Notifications</h2>
-
-
-        <div className="tabs">
-          {Object.keys(notifications).map((tab) => (
-            <button
-              key={tab}
-              className={`tab-button ${activeTab === tab ? "active" : ""}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
-
-
-        <div className="notification-content">
-          <ul>
-            {notifications[activeTab].length > 0 ? (
-              <>
-                {/* Personal Notifications */}
-                {slicedNotifications.some((notif) => !notif.recipientType) && (
-                  <>
-                    <li className="notif-section-title">📬 Your Notifications</li>
-                    {notifications[activeTab]
-                      .filter((notif) => !notif.recipientType)
-                      .slice(0, visibleCount)
-                      .map((notif) => (
-                        <li
-                          key={notif.id}
-                          className={`notification-item ${notif.status === "unread" ? "unread" : "read"}`}
-                          onClick={() => handleNotificationClick(notif)}
-                        >
-                          <div className="notif-header">
-                            <strong>{notif.companyName || "System"}</strong>
-                            {notif.status === "unread" && (
-                              <span className="badge">New 🔥</span>
-                            )}
-                          </div>
-
-
-                          {expandedNotif === notif.id && (
-                            <div className="notif-details">
-                              <p><strong>Subject:</strong> {notif.subject}</p>
-                              <p>{notif.message}</p>
-                              <p className="timestamp">
-                                <strong>Received:</strong> {notif.timestamp?.toDate().toLocaleString()}
-                              </p>
-                            </div>
+    
+<AnimatedGroup 
+  className="notifications-container"
+  baseDelay={0.1}
+  delayIncrement={0.15}
+>
+  <div className="notifications-dashboard">
+    <div className="notifications-header">
+      <h2 className="notifications-title">Notifications</h2>
+      <div className="notifications-tabs">
+        {Object.keys(notifications).map((tab) => (
+          <button
+            key={tab}
+            className={`tab-btn ${activeTab === tab ? "active-tab" : ""}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+      <div className="notifications-feed">
+        <ul className="notification-list">
+          {notifications[activeTab].length > 0 ? (
+            <>
+              {/* Personal Notifications */}
+              {slicedNotifications.some((notif) => !notif.recipientType) && (
+                <>
+                  <li className="feed-section-heading">
+                    <span>📬</span> Your Notifications
+                  </li>
+                  {notifications[activeTab]
+                    .filter((notif) => !notif.recipientType)
+                    .slice(0, visibleCount)
+                    .map((notif) => (
+                      <li
+                        key={notif.id}
+                        className={`notification-card ${
+                          notif.status === "unread" 
+                            ? "unread-item" 
+                            : "read-item"
+                        }`}
+                        onClick={() => handleNotificationClick(notif)}
+                      >
+                        <div className="notification-card-header">
+                          <strong className="sender-name">{notif.companyName || "System"}</strong>
+                          {notif.status === "unread" && (
+                            <span className="status-badge personal">
+                              New <span>🔥</span>
+                            </span>
                           )}
-                        </li>
-                      ))}
-                      {notifications[activeTab].length > visibleCount && (
-                        <button className="see-more-btn" onClick={() => setVisibleCount(notifications[activeTab].length)}>
-                          See More
-                        </button>
-                      )}
-                  </>
-                )}
-
-
-                {/* Announcements */}
-                {slicedNotifications.some((notif) => notif.recipientType) && (
-                  <>
-                    <li className="notif-section-title">📢 Announcements from Admin</li>
-                    {notifications[activeTab]
-                      .filter((notif) => notif.recipientType)
-                      .slice(0, visibleCount)
-                      .map((notif) => (
-                        <li
-                          key={notif.id}
-                          className={`notification-item ${notif.status === "unread" ? "unread" : "read"}`}
-                          onClick={() => handleNotificationClick(notif)}
-                        >
-                          <div className="notif-header">
-                            <strong>Admin</strong>
-                            {notif.status === "unread" && (
-                              <span className="badge">New 📣</span>
-                            )}
+                        </div>
+                        {expandedNotif === notif.id && (
+                          <div className="notification-card-body">
+                            <p><strong>Subject:</strong> {notif.subject}</p>
+                            <p className="message-content">{notif.message}</p>
+                            <p className="timestamp">
+                              <strong>Received:</strong> {notif.timestamp?.toDate().toLocaleString()}
+                            </p>
                           </div>
-
-
-                          {expandedNotif === notif.id && (
-                            <div className="notif-details">
-                              <p><strong>Subject:</strong> {notif.subject}</p>
-                              <p dangerouslySetInnerHTML={{ __html: notif.message }} />
-                              <p className="timestamp">
-                                <strong>Posted:</strong> {notif.timestamp?.toDate().toLocaleString()}
-                              </p>
-                            </div>
+                        )}
+                      </li>
+                    ))}
+                  {notifications[activeTab].length > visibleCount && (
+                    <button className="load-more-btn" onClick={() => setVisibleCount(notifications[activeTab].length)}>
+                      See More
+                    </button>
+                  )}
+                </>
+              )}
+              {/* Announcements */}
+              {slicedNotifications.some((notif) => notif.recipientType) && (
+                <>
+                  <li className="feed-section-heading">
+                    <span>📢</span> Announcements from Admin
+                  </li>
+                  {notifications[activeTab]
+                    .filter((notif) => notif.recipientType)
+                    .slice(0, visibleCount)
+                    .map((notif) => (
+                      <li
+                        key={notif.id}
+                        className={`notification-card ${
+                          notif.status === "unread" 
+                            ? "unread-item admin" 
+                            : "read-item"
+                        }`}
+                        onClick={() => handleNotificationClick(notif)}
+                      >
+                        <div className="notification-card-header">
+                          <strong className="sender-name">Admin</strong>
+                          {notif.status === "unread" && (
+                            <span className="status-badge admin">
+                              New <span>📣</span>
+                            </span>
                           )}
-                        </li>
-                      ))}
-                      {notifications[activeTab].length > visibleCount && (
-                        <button className="see-more-btn" onClick={() => setVisibleCount(notifications[activeTab].length)}>
-                          See More
-                        </button>
-                      )}
-                  </>
-                )}
-              </>
-            ) : (
-              <li className="empty">No new notifications.</li>
-            )}
-          </ul>
-        </div>
+                        </div>
+                        {expandedNotif === notif.id && (
+                          <div className="notification-card-body">
+                            <p><strong>Subject:</strong> {notif.subject}</p>
+                            <p className="message-content" dangerouslySetInnerHTML={{ __html: notif.message }} />
+                            <p className="timestamp">
+                              <strong>Posted:</strong> {notif.timestamp?.toDate().toLocaleString()}
+                            </p>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  {notifications[activeTab].length > visibleCount && (
+                    <button className="load-more-btn" onClick={() => setVisibleCount(notifications[activeTab].length)}>
+                      See More
+                    </button>
+                  )}
+                </>
+              )}
+            </>
+          ) : (
+            <li className="empty-state">
+              <div className="empty-icon">📭</div>
+              <p>No new notifications.</p>
+            </li>
+          )}
+        </ul>
       </div>
     </div>
-    </AnimatedGroup>
+  </div>
+  <style jsx>{`
+      /* Notification Dashboard Styles */
+.notifications-container {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  margin: 7rem auto;
+  max-width: 800px;
+  transition: all 0.3s ease;
+}
+
+.notifications-title {
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+/* Tabs Navigation */
+.notifications-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab-btn:hover {
+  color: #4b5563;
+}
+
+.tab-btn.active-tab {
+  color: #2563eb;
+  font-weight: 600;
+  border-bottom: 2px solid #2563eb;
+}
+
+/* Notification Feed */
+.notifications-feed {
+  margin-top: 1.5rem;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+}
+
+.feed-section-heading {
+  display: flex;
+  align-items: center;
+  color: #4b5563;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.feed-section-heading span {
+  margin-right: 0.5rem;
+}
+
+/* Notification Cards */
+.notification-card {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-card:hover {
+  transform: translateY(-2px);
+}
+
+.notification-card.unread-item {
+  background-color: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.notification-card.unread-item.admin {
+  background-color: #fffbeb;
+  border-left: 4px solid #d97706;
+}
+
+.notification-card.read-item {
+  background-color: #f9fafb;
+}
+
+.notification-card.read-item:hover {
+  background-color: #f3f4f6;
+}
+
+.notification-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sender-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  color: white;
+}
+
+.status-badge.personal {
+  background-color: #2563eb;
+}
+
+.status-badge.admin {
+  background-color: #d97706;
+}
+
+/* Notification Content */
+.notification-card-body {
+  margin-top: 0.75rem;
+  margin-left: 0.5rem;
+  color: #4b5563;
+}
+
+.message-content {
+  margin: 0.75rem 0;
+  line-height: 1.5;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.5rem;
+}
+
+/* Load More Button */
+.load-more-btn {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  font-weight: 500;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.load-more-btn:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Animation Effects */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notification-card {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .notifications-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+  
+  .notifications-tabs {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .notification-card {
+    padding: 0.75rem;
+  }
+}
+   `}</style>
+</AnimatedGroup>
   );
 };
 

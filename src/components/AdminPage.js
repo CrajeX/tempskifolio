@@ -3062,7 +3062,7 @@ const handleApproveUser = async (user) => {
 console.log("Email:", user.email);
 
     // Prepare email template parameters
-    emailjs.init("bWFWZMuU0I3Ok35gl"); // Replace with your actual EmailJS public key
+    emailjs.init("1hCXoeKVFq8hm9LEx"); // Replace with your actual EmailJS public key
     const templateParams = {
       email: user.email,
       html: `
@@ -3098,8 +3098,9 @@ console.log("Email:", user.email);
 
     // Send the email using EmailJS
     const response = await emailjs.send(
-      "service_mu4w5ko", // Your EmailJS service ID
-      "template_g72ruh8", // Your EmailJS template ID
+      // "service_mu4w5ko", // Your EmailJS service ID
+      "service_i0d7mwo",
+      "template_23g6ezo", // Your EmailJS template ID
       templateParams
     );
 

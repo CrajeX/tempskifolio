@@ -858,7 +858,7 @@ return (
             <h2>Applicant Profile</h2>
 
             {/* Cover Photo */}
-            <div style={{ position: 'relative', width: '100%', height: '300px', overflow: 'hidden', marginBottom: '10px', borderRadius: '12px' }}>
+            <div style={{ position: 'relative', width: '100%', height: '400px', overflow: 'hidden', borderRadius: '12px',marginTop:"2rem" }}>
                 <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10 }}>
                     <InfoButton 
                         onClick={() => setShowCoverGuide(!showCoverGuide)}
@@ -879,6 +879,7 @@ return (
                                         <li style={{ marginBottom: '8px' }}><strong>How to update:</strong> Click anywhere on the cover image to upload a new one</li>
                                     </ul>
                                     <div style={{ 
+                                       
                                         padding: '12px',
                                         backgroundColor: '#f0f9ff',
                                         borderLeft: '4px solid #0078d4',
@@ -896,6 +897,7 @@ return (
                     src={coverPhotoURL}
                     alt="Cover"
                     style={{ 
+                        
                         width: '100%', 
                         height: '100%', 
                         objectFit: 'cover', 

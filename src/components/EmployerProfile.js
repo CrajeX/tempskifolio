@@ -429,11 +429,12 @@ const EmployerProfile = () => {
     const [showHiredApplicants, setShowHiredApplicants] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [isHired, setUser] = useState()
-    
+    const [showReportForm, setShowReportForm] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [reportDetails, setReportDetails] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-
-
+       
     const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
         if (!hiredEmployee || !jobId) {
             console.error("No employee or job selected");
@@ -1050,6 +1051,168 @@ if (originalHiredDoc.exists()) {
         setSelectedJob(jobId);
         setShowHiredApplicants(!showHiredApplicants);
     };
+    const handleReportApplicant = async (e) => {
+  e.preventDefault();
+  
+  if (!auth.currentUser) {
+    alert("You must be logged in to report applicants.");
+    return;
+  }
+  
+  if (!reportReason) {
+    alert("Please select a reason for reporting this applicant.");
+    return;
+  }
+  
+  if (!reportDetails || reportDetails.trim().length < 10) {
+    alert("Please provide more details about the violation.");
+    return;
+  }
+  
+  setIsSubmitting(true);
+  
+  try {
+    const employerId = auth.currentUser.uid;
+    const employerRef = doc(db, "employers", employerId);
+    const employerSnap = await getDoc(employerRef);
+    
+    if (!employerSnap.exists()) {
+      alert("Employer profile not found!");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    const employerData = employerSnap.data();
+    
+    // Create the report in a new collection
+    const reportsRef = collection(db, "job_reports");
+    await addDoc(reportsRef, {
+      applicantId: selectedApplicant.id,
+      applicantName: selectedApplicant.name,
+      applicantEmail: selectedApplicant.email,
+      jobId: selectedJob,
+      jobTitle: jobPosts.find(job => job.id === selectedJob)?.title || "Unknown Job",
+      reportedBy: employerId,
+      reporterName: employerData.companyName || "Anonymous Employer",
+      reporterEmail: employerData.email || "No email provided",
+      reason: reportReason,
+      details: reportDetails,
+      status: "pending", // pending, reviewed, resolved
+      createdAt: serverTimestamp(),
+    });
+    
+
+
+    
+    alert("Thank you for your report. Our team will review it shortly.");
+    setShowReportForm(false);
+    setReportReason("");
+    setReportDetails("");
+  } catch (error) {
+    console.error("Error submitting applicant report:", error);
+    alert("There was an error submitting your report. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+    const toggleReportForm = (e) => {
+      e.stopPropagation();
+      setShowReportForm(!showReportForm);
+    };
+    // Report form JSX
+    const reportForm = (
+      <div 
+        style={{
+          marginTop: "20px",
+          padding: "16px",
+          border: "1px solid #eee",
+          borderRadius: "8px",
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <h3 style={{ marginTop: 0, color: "#d32f2f" }}>Report Job Listing</h3>
+        <form onSubmit={handleReportApplicant}>
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
+              Reason for Report:*
+            </label>
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "4px",
+                border: "1px solid #ddd",
+              }}
+              required
+            >
+              <option value="">-- Select a reason --</option>
+              <option value="Discriminatory content">Discriminatory content</option>
+              <option value="Misleading information">Misleading information</option>
+              <option value="Inappropriate salary/compensation">Inappropriate salary/compensation</option>
+              <option value="Scam/Fraud">Scam or fraudulent posting</option>
+              <option value="Duplicate posting">Duplicate posting</option>
+              <option value="Unprofessional language">Unprofessional language</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          
+          <div style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
+              Details:*
+            </label>
+            <textarea
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "4px",
+                border: "1px solid #ddd",
+                minHeight: "100px",
+                resize: "vertical",
+              }}
+              placeholder="Please provide specific details about the violation..."
+              required
+            />
+          </div>
+          
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                backgroundColor: "#d32f2f",
+                color: "#fff",
+                padding: "10px 16px",
+                borderRadius: "4px",
+                border: "none",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                opacity: isSubmitting ? 0.7 : 1,
+              }}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Report"}
+            </button>
+            
+            <button
+              type="button"
+              onClick={toggleReportForm}
+              style={{
+                backgroundColor: "#757575",
+                color: "#fff",
+                padding: "10px 16px",
+                borderRadius: "4px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    );
 
     const getSortedApplicants = (jobId) => {
         if (!applicants[jobId]) return [];
@@ -1066,7 +1229,7 @@ if (originalHiredDoc.exists()) {
     };
     const ApplicantDetailsModal = ({ cert, onClose }) => {
   if (!cert) return null;
-
+    
   return (
     <AnimatedGroup 
             className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
@@ -2018,7 +2181,27 @@ if (originalHiredDoc.exists()) {
                                 &times;
                             </button>
                         </div>
-                        
+                        {showReportForm ? (
+          reportForm
+        ) : (
+          <button
+            onClick={toggleReportForm}
+            style={{
+              backgroundColor: "#ff9800",
+              color: "#fff",
+              padding: "8px 14px",
+              borderRadius: "4px",
+              border: "none",
+              cursor: "pointer",
+              marginTop: "20px",
+              display: "flex",
+              alignItems: "center",
+              fontSize: "14px",
+            }}
+          >
+            <span style={{ marginRight: "6px" }}>⚠️</span> Report Applicant
+          </button>
+        )}
                         <div style={{ padding: '25px' }}>
                             {/* Profile and basic info */}
                             <div style={{ 

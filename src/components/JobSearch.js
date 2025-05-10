@@ -1164,7 +1164,7 @@ return (
               }}
             >
               <div className="job-posting">
-                <AnimatedHeading >{job.title}</AnimatedHeading>
+                <h4>{job.title}</h4>
                 <p><strong>Company:</strong> {job.companyName}</p>
                 <p><strong>Job Role:</strong> {job.jobRole}</p>
                 <p><strong>Location:</strong> {job.location}</p>

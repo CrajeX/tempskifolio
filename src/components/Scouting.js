@@ -120,136 +120,378 @@ const Scouting = () => {
   }
 
   return (
-    <AnimatedGroup 
-        className="my-12 space-y-6 bg-gray-50 p-6 rounded-lg shadow-md"
-        baseDelay={0.2}  // Start delay (seconds)
-        delayIncrement={0.15}  // Each child adds this much delay
-      >
-    <div style={{ padding: "20px", textAlign: "center" }}>
-      <h2 style={{ color: "#333" ,opacity:"0"}}>Scouting Visibility</h2>
+   <AnimatedGroup 
+  className="sc-talent-main-container my-12 space-y-6 rounded-lg shadow-md"
+  baseDelay={0.2}
+  delayIncrement={0.15}
+>
+  <div className="sc-talent-content">
+    <h2 className="sc-talent-title">Scouting Visibility</h2>
 
-      <div className="toggle-container" style={{ marginBottom: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "20px" }}>
-          <input
-            type="checkbox"
-            id="checkboxInput"
-            checked={scoutVisibility}
-            onChange={toggleScoutVisibility}
-          />
-          <label htmlFor="checkboxInput" className="toggleSwitch"></label>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "10px" }}>
-          <p style={{ fontSize: "18px", fontWeight: "600", color: "#000", margin: 0 }}>
-            {scoutVisibility ? "You are visible to employers." : "You are hidden from employers."}
-          </p>
-        </div>
+    <div className="sc-talent-toggle-container">
+      <div className="sc-talent-toggle-wrapper">
+        <input
+          type="checkbox"
+          id="sc_talent_checkbox"
+          className="sc-talent-checkbox"
+          checked={scoutVisibility}
+          onChange={toggleScoutVisibility}
+        />
+        <label htmlFor="sc_talent_checkbox" className="sc-talent-toggle-switch"></label>
       </div>
 
-      {scoutVisibility && (
-        <div style={{ maxWidth: "700px", margin: "auto", background: "#ffffff", padding: "30px", borderRadius: "12px", boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)" }}>
-          <h3 style={{ marginBottom: "15px", color: "#333" }}>Experience Level</h3>
-          <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "25px" }}>
-            <button
-              className="experience-btn"
-              onClick={() => handleExperienceChange("No experience")}
-              style={{
-                padding: "15px 40px",
-                borderRadius: "10px",
-                border: "2px solid #4ad4d4",
-                background: experience === "No experience" ? "#4ad4d4" : "#fff",
-                color: experience === "No experience" ? "#fff" : "#4ad4d4",
-                cursor: "pointer",
-                fontSize: "18px",
-                fontWeight: "600",
-                transition: "all 0.3s ease"
-              }}
-            >
-              No Experience
-            </button>
-
-            <button
-              className="experience-btn"
-              onClick={() => handleExperienceChange("Have job experience")}
-              style={{
-                padding: "15px 40px",
-                borderRadius: "10px",
-                border: "2px solid #4ad4d4",
-                background: experience === "Have job experience" ? "#4ad4d4" : "#fff",
-                color: experience === "Have job experience" ? "#fff" : "#4ad4d4",
-                cursor: "pointer",
-                fontSize: "18px",
-                fontWeight: "600",
-                transition: "all 0.3s ease"
-              }}
-            >
-              Have Job Experience
-            </button>
-          </div>
-
-          <h3 style={{ marginBottom: "15px", color: "#333" }}>Filter Skills</h3>
-          <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginBottom: "20px" }}>
-            <button
-              onClick={() => setFilterMode("relevancy")}
-              style={{
-                padding: "10px 20px",
-                borderRadius: "8px",
-                border: "2px solid #4ad4d4",
-                background: filterMode === "relevancy" ? "#4ad4d4" : "#fff",
-                color: filterMode === "relevancy" ? "#fff" : "#4ad4d4",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontSize: "16px",
-                transition: "0.3s"
-              }}
-            >
-              Relevancy
-            </button>
-
-            <button
-              onClick={() => setFilterMode("absolute")}
-              style={{
-                padding: "10px 20px",
-                borderRadius: "8px",
-                border: "2px solid #4ad4d4",
-                background: filterMode === "absolute" ? "#4ad4d4" : "#fff",
-                color: filterMode === "absolute" ? "#fff" : "#4ad4d4",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontSize: "16px",
-                transition: "0.3s"
-              }}
-            >
-              Absolute
-            </button>
-          </div>
-
-          <h3 style={{ marginBottom: "15px", color: "#333" }}>Preferred Job Roles</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-            {getDisplayedJobs().map((job) => (
-              <div
-                key={job}
-                onClick={() => toggleSkillSelection(job)}
-                style={{
-                  padding: "14px",
-                  border: "2px solid #ccc",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  background: skills[job] ? "#4ad4d4" : "#fff",
-                  fontWeight: "600",
-                  textAlign: "center",
-                  transition: "0.3s",
-                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)"
-                }}
-              >
-                {job}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="sc-talent-status-message">
+        <p className="sc-talent-status-text">
+          {scoutVisibility ? "You are visible to employers." : "You are hidden from employers."}
+        </p>
+      </div>
     </div>
-    </AnimatedGroup>
+
+    {scoutVisibility && (
+      <div className="sc-talent-options-panel">
+        <h3 className="sc-talent-section-title">Experience Level</h3>
+        <div className="sc-talent-experience-buttons">
+          <button
+            className={`sc-talent-exp-btn ${experience === "No experience" ? "sc-talent-active" : ""}`}
+            onClick={() => handleExperienceChange("No experience")}
+          >
+            No Experience
+          </button>
+
+          <button
+            className={`sc-talent-exp-btn ${experience === "Have job experience" ? "sc-talent-active" : ""}`}
+            onClick={() => handleExperienceChange("Have job experience")}
+          >
+            Have Job Experience
+          </button>
+        </div>
+
+        {/* <h3 className="sc-talent-section-title">Filter Skills</h3>
+        <div className="sc-talent-filter-buttons">
+          <button
+            className={`sc-talent-filter-btn ${filterMode === "relevancy" ? "sc-talent-active" : ""}`}
+            onClick={() => setFilterMode("relevancy")}
+          >
+            Relevancy
+          </button>
+
+          <button
+            className={`sc-talent-filter-btn ${filterMode === "absolute" ? "sc-talent-active" : ""}`}
+            onClick={() => setFilterMode("absolute")}
+          >
+            Absolute
+          </button>
+        </div> */}
+
+        <h3 className="sc-talent-section-title">Preferred Job Roles</h3>
+        <div className="sc-talent-job-grid">
+          {getDisplayedJobs().map((job) => (
+            <div
+              key={job}
+              onClick={() => toggleSkillSelection(job)}
+              className={`sc-talent-job-item ${skills[job] ? "sc-talent-selected" : ""}`}
+            >
+              {job}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+
+  <style jsx>{`
+    .sc-talent-main-container {
+      background-color: transparent;
+      padding: 5rem;
+      border: none;
+    }
+    
+    .sc-talent-content {
+      padding: 1.5rem;
+      text-align: center;
+    }
+    
+    .sc-talent-title {
+      color: #1e293b;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      animation: fadeIn 0.6s ease-in-out;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .sc-talent-title:after {
+      content: "";
+      position: absolute;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+    
+    .sc-talent-toggle-container {
+      margin-bottom: 2rem;
+    }
+    
+    .sc-talent-toggle-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 1.25rem;
+    }
+    
+    .sc-talent-checkbox {
+      position: absolute;
+      opacity: 0;
+      height: 0;
+      width: 0;
+    }
+    
+    .sc-talent-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+      background-color: rgba(203, 213, 225, 0.6);
+      border-radius: 34px;
+      transition: 0.4s;
+      cursor: pointer;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sc-talent-toggle-switch:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.4s;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sc-talent-checkbox:checked + .sc-talent-toggle-switch {
+      background: linear-gradient(45deg, #3b82f6, #06b6d4);
+    }
+    
+    .sc-talent-checkbox:checked + .sc-talent-toggle-switch:before {
+      transform: translateX(26px);
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+    }
+    
+    .sc-talent-status-message {
+      display: flex;
+      justify-content: center;
+      margin-top: 0.75rem;
+    }
+    
+    .sc-talent-status-text {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0;
+      transition: color 0.3s ease;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);
+    }
+    
+    .sc-talent-checkbox:checked ~ .sc-talent-status-message .sc-talent-status-text {
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: subtlePulse 1s ease-in-out;
+    }
+    
+    .sc-talent-options-panel {
+      max-width: 700px;
+      margin: 1.5rem auto 0;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      animation: slideUp 0.5s ease-out;
+    }
+    
+    .sc-talent-section-title {
+      margin-bottom: 1.25rem;
+      color: #1e293b;
+      font-size: 1.25rem;
+      font-weight: 600;
+      position: relative;
+      display: inline-block;
+      letter-spacing: 0.5px;
+    }
+    
+    .sc-talent-section-title:after {
+      content: "";
+      position: absolute;
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+    
+    .sc-talent-experience-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    
+    .sc-talent-exp-btn {
+      padding: 0.875rem 2rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(255, 255, 255, 0.7);
+      color: #3b82f6;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .sc-talent-exp-btn:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.15);
+    }
+    
+    .sc-talent-exp-btn.sc-talent-active {
+      background: linear-gradient(45deg, #3b82f6, #06b6d4);
+      color: #fff;
+      border: 1px solid transparent;
+    }
+    
+    .sc-talent-filter-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    
+    .sc-talent-filter-btn {
+      padding: 0.625rem 1.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      background: rgba(255, 255, 255, 0.7);
+      color: #3b82f6;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .sc-talent-filter-btn:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.15);
+    }
+    
+    .sc-talent-filter-btn.sc-talent-active {
+      background: linear-gradient(45deg, #3b82f6, #06b6d4);
+      color: #fff;
+      border: 1px solid transparent;
+    }
+    
+    .sc-talent-job-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    
+    .sc-talent-job-item {
+      padding: 0.875rem;
+      border: 1px solid rgba(226, 232, 240, 0.6);
+      border-radius: 1rem;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.6);
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      backdrop-filter: blur(5px);
+    }
+    
+    .sc-talent-job-item:hover {
+      border-color: rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.1);
+      background: rgba(255, 255, 255, 0.8);
+    }
+    
+    .sc-talent-job-item.sc-talent-selected {
+      background: linear-gradient(45deg, #3b82f6, #06b6d4);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 6px 15px rgba(59, 130, 246, 0.2);
+    }
+    
+    @keyframes fadeIn {
+      0% { 
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      100% { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes slideUp {
+      0% { 
+        opacity: 0;
+        transform: translateY(20px);
+        filter: blur(5px);
+      }
+      100% { 
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+    
+    /* Add subtle pulse animation for toggle */
+    @keyframes subtlePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    @media (max-width: 768px) {
+      .sc-talent-job-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .sc-talent-experience-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .sc-talent-job-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .sc-talent-filter-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    }
+  `}</style>
+</AnimatedGroup>
   );
 };
 
