@@ -345,7 +345,6 @@ const FAQ = ({ userType = "applicant" }) => {
           </a>
 
           
-
             
           
         </div>

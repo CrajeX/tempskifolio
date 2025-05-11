@@ -907,6 +907,16 @@ const FAQHOME = ({ userType = "applicant" }) => {
     category: "Account"
   },
   {
+      question: "How do I sign up as applicant?",
+      answer: "You can watch this video:https://youtu.be/TKnmAIioqvo?si=wdjBeUJb5I-uVVMS",
+      category: "Features"
+    },
+    {
+      question: "How do I sign up as employer?",
+      answer: "You can watch this video:https://youtu.be/6nv8fRYIbag?si=mvwMq5nKVmPBNbx8",
+      category: "Features"
+    },
+  {
     question: "How do I apply for a job?",
     answer: "Use the 'Search Jobs' feature to browse listings and apply with your portfolio.",
     category: "Jobs"
