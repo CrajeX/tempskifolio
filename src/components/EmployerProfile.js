@@ -435,123 +435,109 @@ const EmployerProfile = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
        
-    const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
-        if (!hiredEmployee || !jobId) {
-            console.error("No employee or job selected");
-            return;
-        }
-    
-        const confirmRemove = window.confirm(`Are you sure you want to remove ${hiredEmployee.name} from hired employees?`);
+const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
+  if (!hiredEmployee || !jobId) {
+    console.error("No employee or job selected");
+    return;
+  }
+
+  const confirmRemove = window.confirm(`Are you sure you want to remove ${hiredEmployee.name} from hired employees?`);
+  
+  if (confirmRemove) {
+    try {
+      // Get the employer's company name
+      const employerRef = doc(db, "employers", auth.currentUser.uid);
+      const employerDoc = await getDoc(employerRef);
+      
+      if (!employerDoc.exists()) {
+        console.error("Employer document not found");
+        alert("Error: Employer profile not found");
+        return;
+      }
+      
+      const employerData = employerDoc.data();
+      const companyName = employerData.companyName;
+      
+      if (!companyName) {
+        console.error("Company name not found in employer data");
+        alert("Error: Company name not found in your profile");
+        return;
+      }
+      
+      // 1. Remove from the legacy structure first (if it exists there)
+      const legacyHiredRef = doc(db, "employers", auth.currentUser.uid, "hired", jobId);
+      const legacyHiredDoc = await getDoc(legacyHiredRef);
+      
+      if (legacyHiredDoc.exists()) {
+        const currentHired = legacyHiredDoc.data().applicants || [];
         
-        if (confirmRemove) {
-            try {
-                // Get the employer's company name
-                const employerRef = doc(db, "employers", auth.currentUser.uid);
-                const employerDoc = await getDoc(employerRef);
-                
-                if (!employerDoc.exists()) {
-                    console.error("Employer document not found");
-                    alert("Error: Employer profile not found");
-                    return;
-                }
-                
-                const employerData = employerDoc.data();
-                const companyName = employerData.companyName;
-                
-                if (!companyName) {
-                    console.error("Company name not found in employer data");
-                    alert("Error: Company name not found in your profile");
-                    return;
-                }
-                
-                const originalHiredRef = doc(db, "companies", companyName, "hired", jobId);
-const originalHiredDoc = await getDoc(originalHiredRef);
-
-if (originalHiredDoc.exists()) {
-    const currentHired = originalHiredDoc.data().applicants || [];
-    
-    // Find the employee to be removed
-    const employeeToRemove = currentHired.find(employee => employee.id === hiredEmployee.id);
-    
-    if (employeeToRemove) {
-        // Save the removed employee data to deletedFiles collection
-        await setDoc(doc(db, "deletedFiles", `removed-from-hired-list-${hiredEmployee.id}-${jobId}`), {
-            originalPath: `companies/${companyName}/hired/${jobId}`,
-            removedEmployee: employeeToRemove,
-            originalDocument: originalHiredDoc.data(),
-            deletedAt: serverTimestamp(),
-            companyName: companyName,
-            jobId: jobId,
-            action: "removed_from_list" // Indicates this was a removal from a list, not a document deletion
+        // Find the employee reference to be removed
+        const employeeIndex = currentHired.findIndex(employee => 
+          employee.id === hiredEmployee.id || 
+          (employee.reference && employee.reference.includes(hiredEmployee.id))
+        );
+        
+        if (employeeIndex !== -1) {
+          // Save the removed reference data to deletedFiles collection
+          await setDoc(doc(db, "deletedFiles", `removed-legacy-ref-${hiredEmployee.id}-${jobId}`), {
+            originalPath: `employers/${auth.currentUser.uid}/hired/${jobId}`,
+            removedReference: currentHired[employeeIndex],
+            deletedAt: new Date().toISOString(),
+            action: "removed_reference"
+          });
+          
+          // Remove the reference from the array
+          currentHired.splice(employeeIndex, 1);
+          
+          // Update the document with filtered array
+          if (currentHired.length > 0) {
+            await setDoc(legacyHiredRef, { 
+              applicants: currentHired,
+              jobId: jobId
+            }, { merge: true });
+          } else {
+            // If no references left, delete the document
+            await deleteDoc(legacyHiredRef);
+          }
+        }
+      }
+      
+      // 2. Remove from the primary storage (company-based structure)
+      const hiredEmployeeRef = doc(db, "companies", companyName, "jobs", jobId, "hired", hiredEmployee.id);
+      const hiredEmployeeSnapshot = await getDoc(hiredEmployeeRef);
+      
+      if (hiredEmployeeSnapshot.exists()) {
+        // Save the hired employee data to deletedFiles collection for recovery if needed
+        await setDoc(doc(db, "deletedFiles", `removed-hire-${hiredEmployee.id}-${Date.now()}`), {
+          originalPath: `companies/${companyName}/jobs/${jobId}/hired/${hiredEmployee.id}`,
+          employeeData: hiredEmployeeSnapshot.data(),
+          deletedAt: new Date().toISOString(),
+          companyName: companyName,
+          jobId: jobId,
+          employeeId: hiredEmployee.id,
+          action: "removed_hired_employee"
         });
+        
+        // Delete the document
+        await deleteDoc(hiredEmployeeRef);
+      } else {
+        console.warn("Hired employee document not found in primary storage path");
+      }
+      
+      // 3. Update local state
+      setHiredApplicants(prev => ({
+        ...prev,
+        [jobId]: (prev[jobId] || []).filter(emp => emp.id !== hiredEmployee.id)
+      }));
+      
+      alert(`${hiredEmployee.name} has been removed from hired employees.`);
+      
+    } catch (error) {
+      console.error("Error removing hired employee:", error);
+      alert("Failed to remove hired employee. Please try again.");
     }
-    
-            // Filter out the employee to remove
-            const updatedHired = currentHired.filter(employee => employee.id !== hiredEmployee.id);
-            
-            // Update the document with filtered array
-            if (updatedHired.length > 0) {
-                await setDoc(originalHiredRef, { 
-                    applicants: updatedHired,
-                    jobId: jobId
-                }, { merge: true });
-            } else {
-                // If no hired employees left, backup the entire document before deletion
-                await setDoc(doc(db, "deletedFiles", `deleted-hired-list-${jobId}`), {
-                    originalPath: `companies/${companyName}/hired/${jobId}`,
-                    documentData: originalHiredDoc.data(),
-                    deletedAt: serverTimestamp(),
-                    companyName: companyName,
-                    jobId: jobId,
-                    action: "complete_document_deletion"
-                });
-                
-                // Now delete the document
-                await deleteDoc(originalHiredRef);
-            }
-        }
-                
-                // 2. Remove from the new company-based structure
-                // Get reference to the hired employee document
-                const hiredEmployeeRef = doc(db, "companies", companyName, "jobs", jobId, "hired", hiredEmployee.id);
-
-                // Get the current data before deleting
-                const hiredEmployeeSnapshot = await getDoc(hiredEmployeeRef);
-
-                if (hiredEmployeeSnapshot.exists()) {
-                    // Save the hired employee data to deletedFiles collection
-                    await setDoc(doc(db, "deletedFiles", `removed-hire-${hiredEmployee.id}`), {
-                        originalPath: `companies/${companyName}/jobs/${jobId}/hired/${hiredEmployee.id}`,
-                        employeeData: hiredEmployeeSnapshot.data(),
-                        deletedAt: serverTimestamp(),
-                        companyName: companyName,
-                        jobId: jobId,
-                        employeeId: hiredEmployee.id
-                    });
-                    
-                    // Now delete the original document
-                    await deleteDoc(hiredEmployeeRef);
-                    
-                    // You might want to add UI feedback here, like:
-                    // setHiredEmployees(prev => prev.filter(emp => emp.id !== hiredEmployee.id));
-                    // Or show an alert: alert("Employee removed successfully");
-                } else {
-                    console.error("Hired employee document doesn't exist, cannot backup before deletion");
-                }
-                
-                // 3. Update local state
-                setHiredApplicants(prev => ({
-                    ...prev,
-                    [jobId]: (prev[jobId] || []).filter(emp => emp.id !== hiredEmployee.id)
-                }));
-                
-                alert(`${hiredEmployee.name} has been removed from hired employees.`);
-            } catch (error) {
-                console.error("Error removing hired employee:", error);
-                alert("Failed to remove hired employee. Please try again.");
-            }
-        }
-    };
+  }
+};
 
     useEffect(() => {
         if (selectedJob) {
@@ -559,31 +545,48 @@ if (originalHiredDoc.exists()) {
         }
     }, [selectedJob]);
 
-    const fetchHiredEmployees = async (jobId) => {
-        if (!jobId) return;
-        
-        try {
-            const hiredRef = doc(db, "employers", auth.currentUser.uid, "hired", jobId);
-            const hiredDoc = await getDoc(hiredRef);
-            
-            if (hiredDoc.exists()) {
-                const hiredData = hiredDoc.data();
-                
-                setHiredApplicants(prev => ({
-                    ...prev,
-                    [jobId]: hiredData.applicants || []
-                }));
-            } else {
-                setHiredApplicants(prev => ({
-                    ...prev,
-                    [jobId]: []
-                }));
-            }
-        } catch (error) {
-            console.error("Error fetching hired employees:", error);
-        }
-    };
+    const fetchHiredEmployees = async (jobId, companyName) => {
+    if (!jobId || !companyName) return;
     
+    try {
+        // Get reference to the hired collection for this job
+        const hiredCollectionRef = collection(db, "companies", companyName, "jobs", jobId, "hired");
+        const hiredSnapshot = await getDocs(hiredCollectionRef);
+        
+        if (!hiredSnapshot.empty) {
+            // If there are hired applicants, collect their IDs
+            const hiredApplicantsIds = hiredSnapshot.docs.map(doc => doc.id);
+            
+            // For each hired applicant, get their full details
+            const hiredApplicantsData = await Promise.all(
+                hiredApplicantsIds.map(async (applicantId) => {
+                    const applicantRef = doc(db, "companies", companyName, "jobs", jobId, "hired", applicantId);
+                    const applicantDoc = await getDoc(applicantRef);
+                    if (applicantDoc.exists()) {
+                        return { id: applicantId, ...applicantDoc.data() };
+                    }
+                    return null;
+                })
+            );
+            
+            // Filter out any null values and update state
+            const validHiredApplicants = hiredApplicantsData.filter(Boolean);
+            
+            setHiredApplicants(prev => ({
+                ...prev,
+                [jobId]: validHiredApplicants
+            }));
+        } else {
+            // No hired applicants for this job
+            setHiredApplicants(prev => ({
+                ...prev,
+                [jobId]: []
+            }));
+        }
+    } catch (error) {
+        console.error("Error fetching hired employees:", error);
+    }
+};
     const [editedData, setEditedData] = useState({
         industry: "",
         location: "",
@@ -629,48 +632,86 @@ if (originalHiredDoc.exists()) {
     }, []);
 
     useEffect(() => {
-        const unsubscribeMap = {};
-    
-        jobPosts.forEach((job) => {
-            const applicationsRef = collection(db, "jobs", job.id, "applications");
-    
-            // Listen for real-time changes
-            const unsubscribe = onSnapshot(applicationsRef, (snapshot) => {
-                const applicantsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    
-                setApplicants((prev) => ({
-                    ...prev,
-                    [job.id]: applicantsData,
-                }));
-            });
-    
-            unsubscribeMap[job.id] = unsubscribe;
+    const unsubscribeMap = {};
 
-            // Fetch hired applicants
-            const fetchHiredApplicants = async () => {
-                try {
-                    const hiredRef = collection(db, "employers", auth.currentUser.uid, "hired");
-                    const hiredDocRef = doc(hiredRef, job.id);
-                    const hiredDocSnap = await getDoc(hiredDocRef);
+    jobPosts.forEach((job) => {
+        // Set up listener for applications
+        const applicationsRef = collection(db, "jobs", job.id, "applications");
+
+        // Listen for real-time changes to applications
+        const unsubscribe = onSnapshot(applicationsRef, (snapshot) => {
+            const applicantsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+            setApplicants((prev) => ({
+                ...prev,
+                [job.id]: applicantsData,
+            }));
+        });
+
+        unsubscribeMap[job.id] = unsubscribe;
+
+        // Fetch hired applicants based on the data structure from your screenshot
+        const fetchHiredApplicants = async () => {
+            try {
+                // First try the new structure from your screenshot
+                // Path: /companies/{companyName}/jobs/{jobId}/hired/
+                if (job.companyName) {
+                    const newHiredRef = collection(db, "companies", job.companyName, "jobs", job.id, "hired");
+                    const newHiredSnapshot = await getDocs(newHiredRef);
                     
-                    if (hiredDocSnap.exists()) {
+                    if (!newHiredSnapshot.empty) {
+                        // Map each hired applicant document to include its ID and data
+                        const hiredApplicantsData = newHiredSnapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
+                        
                         setHiredApplicants(prev => ({
                             ...prev,
-                            [job.id]: hiredDocSnap.data().applicants || []
+                            [job.id]: hiredApplicantsData
                         }));
+                        
+                        // If we found applicants in the new structure, return early
+                        return;
                     }
-                } catch (error) {
-                    console.error("Error fetching hired applicants:", error);
                 }
-            };
-
-            fetchHiredApplicants();
-        });
-    
-        return () => {
-            Object.values(unsubscribeMap).forEach((unsubscribe) => unsubscribe());
+                
+                // Fall back to the existing structure if new structure had no results
+                // Path: employers/{uid}/hired/{jobId}
+                const hiredRef = collection(db, "employers", auth.currentUser.uid, "hired");
+                const hiredDocRef = doc(hiredRef, job.id);
+                const hiredDocSnap = await getDoc(hiredDocRef);
+                
+                if (hiredDocSnap.exists()) {
+                    setHiredApplicants(prev => ({
+                        ...prev,
+                        [job.id]: hiredDocSnap.data().applicants || []
+                    }));
+                } else {
+                    // Make sure we have an empty array if no hired applicants are found
+                    setHiredApplicants(prev => ({
+                        ...prev,
+                        [job.id]: []
+                    }));
+                }
+            } catch (error) {
+                console.error("Error fetching hired applicants for job", job.id, ":", error);
+                // Ensure we have an empty array even in case of error
+                setHiredApplicants(prev => ({
+                    ...prev,
+                    [job.id]: []
+                }));
+            }
         };
-    }, [jobPosts]);
+
+        fetchHiredApplicants();
+    });
+
+    // Clean up listeners on unmount
+    return () => {
+        Object.values(unsubscribeMap).forEach((unsubscribe) => unsubscribe());
+    };
+}, [jobPosts]);
 
     const handleJobClick = (job) => {
         setSelectedJob(job.id);
@@ -747,7 +788,97 @@ if (originalHiredDoc.exists()) {
     const handleChange = (e) => {
         setEditedData({ ...editedData, [e.target.name]: e.target.value });
     };
+    const handleAcceptSend = async (job) => {
+        if (!selectedApplicant || !selectedJob || !employer) {
+            console.error("Missing required data (applicant, job, or employer).");
+            return;
+        }
 
+        try {
+            // Reference to the applicant's notifications subcollection
+            const notificationsRef = collection(db, "applicants", selectedApplicant.id, "notifications");
+            const jobRef = doc(db, "jobs", selectedJob);
+
+                // Then fetch the document
+            const jobSnapshot = await getDoc(jobRef);
+
+            const jobData = jobSnapshot.data();
+            const jobTitle = jobData.title; // Now you can access title
+               
+            const emailbody = `Your job application for ${jobTitle} have been accepted`
+            const emailsub = "Job Status"
+            // Create the notification object with company name, email subject, and email body
+            const newNotification = {
+                jobId: selectedJob,
+                companyName: employer.companyName,
+                subject: emailsub,
+                message: emailbody,
+                timestamp: new Date(),
+                status: "unread",
+            };
+
+            // Add the notification to Firestore
+            await addDoc(notificationsRef, newNotification);
+
+            console.log("Notification added successfully!");
+
+            // Show success alert
+            
+
+            // Close the applicant submission modal
+            setSelectedApplicant(null);
+            
+        } catch (error) {
+            console.error("Error sending email or updating Firestore:", error);
+            alert("Failed to send email. Please try again.");
+        }
+    };
+    const handleRejectSend = async (job) => {
+        if (!selectedApplicant || !selectedJob || !employer) {
+            console.error("Missing required data (applicant, job, or employer).");
+            return;
+        }
+
+        try {
+            // Reference to the applicant's notifications subcollection
+            const notificationsRef = collection(db, "applicants", selectedApplicant.id, "notifications");
+             const jobRef = doc(db, "jobs", selectedJob);
+
+                // Then fetch the document
+                const jobSnapshot = await getDoc(jobRef);
+
+               
+                // Access the data
+                const jobData = jobSnapshot.data();
+                const jobTitle = jobData.title; // Now you can access title
+               
+            const emailbody = `Your job application for ${jobTitle} have been rejected`
+            const emailsub = "Job Status"
+            // Create the notification object with company name, email subject, and email body
+            const newNotification = {
+                jobId: selectedJob,
+                companyName: employer.companyName,
+                subject: emailsub,
+                message: emailbody,
+                timestamp: new Date(),
+                status: "unread",
+            };
+            // Add the notification to Firestore
+            await addDoc(notificationsRef, newNotification);
+
+            console.log("Notification added successfully!");
+
+            // Show success alert
+            
+
+            // Close the applicant submission modal
+            setSelectedApplicant(null);
+            
+        } catch (error) {
+            console.error("Error sending email or updating Firestore:", error);
+            alert("Failed to send email. Please try again.");
+        }
+    };
     const handleEmailSend = async () => {
         if (!selectedApplicant || !selectedJob || !employer) {
             console.error("Missing required data (applicant, job, or employer).");
@@ -757,7 +888,7 @@ if (originalHiredDoc.exists()) {
         try {
             // Reference to the applicant's notifications subcollection
             const notificationsRef = collection(db, "applicants", selectedApplicant.id, "notifications");
-
+           
             // Create the notification object with company name, email subject, and email body
             const newNotification = {
                 jobId: selectedJob,
@@ -786,144 +917,210 @@ if (originalHiredDoc.exists()) {
     };
 
     // New functions for requirements
-    const handleHireApplicant = async () => {
-    if (!selectedApplicant || !selectedJob) {
-        console.error("No applicant or job selected");
-        return;
-    }
+  const handleHireApplicant = async () => {
+  if (!selectedApplicant || !selectedJob) {
+    console.error("No applicant or job selected");
+    return;
+  }
 
+  try {
+    // Get the employer's company name
+    const serverTimestamp = new Date().toISOString();
+    const employerRef = doc(db, "employers", auth.currentUser.uid);
+    const employerDoc = await getDoc(employerRef);
+    
+    if (!employerDoc.exists()) {
+      console.error("Employer document not found");
+      alert("Error: Employer profile not found");
+      return;
+    }
+    
+    const employerData = employerDoc.data();
+    const companyName = employerData.companyName;
+    
+    if (!companyName) {
+      console.error("Company name not found in employer data");
+      alert("Error: Company name not found in your profile");
+      return;
+    }
+    
+    // PRIMARY STORAGE: company-based structure
+    // 1. Ensure the company document exists
+    const companyDocRef = doc(db, "companies", companyName);
+    const companyDoc = await getDoc(companyDocRef);
+    
+    if (!companyDoc.exists()) {
+      // Create the company document if it doesn't exist
+      await setDoc(companyDocRef, {
+        companyName: companyName,
+        employerId: auth.currentUser.uid,
+        createdAt: serverTimestamp
+      });
+    }
+    
+    // 2. Ensure the job document exists under this company
+    const jobInCompanyRef = doc(db, "companies", companyName, "jobs", selectedJob);
+    const jobInCompanyDoc = await getDoc(jobInCompanyRef);
+    
+    if (!jobInCompanyDoc.exists()) {
+      // Get job data from the jobs collection
+      const jobRef = doc(db, "jobs", selectedJob);
+      const jobDoc = await getDoc(jobRef);
+      
+      if (jobDoc.exists()) {
+        // Add job to the company's jobs collection
+        await setDoc(jobInCompanyRef, {
+          ...jobDoc.data(),
+          companyName: companyName,
+          employerId: auth.currentUser.uid,
+          updatedAt: serverTimestamp
+        });
+      } else {
+        // If job doesn't exist, create a minimal entry
+        await setDoc(jobInCompanyRef, {
+          id: selectedJob,
+          companyName: companyName,
+          employerId: auth.currentUser.uid,
+          createdAt: serverTimestamp
+        });
+      }
+    }
+    
+    // 3. Check if applicant is already hired
+    const hiredApplicantRef = doc(db, "companies", companyName, "jobs", selectedJob, "hired", selectedApplicant.id);
+    const hiredApplicantDoc = await getDoc(hiredApplicantRef);
+    
+    if (hiredApplicantDoc.exists()) {
+      alert("This applicant has already been hired!");
+      return;
+    }
+    
+    // 4. Add the applicant to the hired subcollection under the job
+    await setDoc(hiredApplicantRef, {
+      ...selectedApplicant,
+      jobId: selectedJob,
+      companyName: companyName,
+      employerId: auth.currentUser.uid,
+      hiredAt: serverTimestamp
+    });
+    
+    // 5. Create a REFERENCE in the legacy structure (instead of duplicating data)
+    const originalHiredRef = doc(db, "employers", auth.currentUser.uid, "hired", selectedJob);
+    
+    // Get current hired applicants if they exist
+    const originalHiredDoc = await getDoc(originalHiredRef);
+    let currentHired = [];
+    
+    if (originalHiredDoc.exists()) {
+      currentHired = originalHiredDoc.data().applicants || [];
+    }
+    
+    // Add a reference to the applicant (storing ID only, not full data)
+    currentHired.push({
+      id: selectedApplicant.id,
+      reference: `companies/${companyName}/jobs/${selectedJob}/hired/${selectedApplicant.id}`
+    });
+    
+    // Update original Firestore location with reference
+    await setDoc(originalHiredRef, { 
+      applicants: currentHired,
+      jobId: selectedJob
+    }, { merge: true });
+    
+    // 6. Remove applicant from all jobs application collections where they've applied
+    // First, handle the current job's applications collection
+    const applicationRef = doc(db, "jobs", selectedJob, "applications", selectedApplicant.id);
+    
     try {
-        // Get the employer's company name
-        const serverTimestamp = new Date().toISOString();
-        const employerRef = doc(db, "employers", auth.currentUser.uid);
-        const employerDoc = await getDoc(employerRef);
+      const applicationSnapshot = await getDoc(applicationRef);
+      
+      if (applicationSnapshot.exists()) {
+        // Backup before deletion
+        await setDoc(doc(db, "deletedFiles", `hired-applicant-${selectedApplicant.id}-job-${selectedJob}`), {
+          originalPath: `jobs/${selectedJob}/applications/${selectedApplicant.id}`,
+          applicantData: applicationSnapshot.data(),
+          deletedAt: serverTimestamp,
+          jobId: selectedJob,
+          hiredReference: `companies/${companyName}/jobs/${selectedJob}/hired/${selectedApplicant.id}`
+        });
         
-        if (!employerDoc.exists()) {
-            console.error("Employer document not found");
-            alert("Error: Employer profile not found");
-            return;
-        }
-        
-        const employerData = employerDoc.data();
-        const companyName = employerData.companyName;
-        
-        if (!companyName) {
-            console.error("Company name not found in employer data");
-            alert("Error: Company name not found in your profile");
-            return;
-        }
-        
-        // 1. Add to the original hired subcollection (for backward compatibility)
-        const originalHiredRef = doc(db, "employers", auth.currentUser.uid, "hired", selectedJob);
-        
-        // Get current hired applicants if they exist
-        const originalHiredDoc = await getDoc(originalHiredRef);
-        let currentHired = [];
-
-        if (originalHiredDoc.exists()) {
-            currentHired = originalHiredDoc.data().applicants || [];
-        }
-
-        // Check if applicant is already hired
-        if (!currentHired.some(app => app.id === selectedApplicant.id)) {
-            // Add applicant to the hired list
-            currentHired.push(selectedApplicant);
-
-            // Update original Firestore location
-            await setDoc(originalHiredRef, { 
-                applicants: currentHired,
-                jobId: selectedJob
-            }, { merge: true });
+        // Delete from the current job's applications
+        await deleteDoc(applicationRef);
+        console.log(`Removed applicant ${selectedApplicant.id} from job ${selectedJob}`);
+      }
+      
+      // If you know the applicant might have applied to multiple jobs,
+      // check if we need to remove them from any other job applications
+      // This could be implemented different ways:
+      
+      // Option 1: If you have a record of which jobs they've applied to:
+      if (selectedApplicant.appliedJobs && Array.isArray(selectedApplicant.appliedJobs)) {
+        for (const jobId of selectedApplicant.appliedJobs) {
+          if (jobId !== selectedJob) { // Skip the one we already handled
+            const otherJobAppRef = doc(db, "jobs", jobId, "applications", selectedApplicant.id);
+            const otherAppSnapshot = await getDoc(otherJobAppRef);
             
-            // 2. Now add to the new company-based structure
-            // First, ensure the company document exists
-            const companyDocRef = doc(db, "companies", companyName);
-            const companyDoc = await getDoc(companyDocRef);
-            
-            if (!companyDoc.exists()) {
-                // Create the company document if it doesn't exist
-                await setDoc(companyDocRef, {
-                    companyName: companyName,
-                    employerId: auth.currentUser.uid,
-                    createdAt: serverTimestamp
-                });
+            if (otherAppSnapshot.exists()) {
+              // Backup before deletion
+              await setDoc(doc(db, "deletedFiles", `hired-applicant-${selectedApplicant.id}-job-${jobId}`), {
+                originalPath: `jobs/${jobId}/applications/${selectedApplicant.id}`,
+                applicantData: otherAppSnapshot.data(),
+                deletedAt: serverTimestamp,
+                originalJobId: jobId,
+                hiredJobId: selectedJob,
+                hiredReference: `companies/${companyName}/jobs/${selectedJob}/hired/${selectedApplicant.id}`
+              });
+              
+              // Delete from the other job's applications
+              await deleteDoc(otherJobAppRef);
+              console.log(`Removed applicant ${selectedApplicant.id} from job ${jobId}`);
             }
-            
-            // Ensure the job document exists under this company
-            const jobInCompanyRef = doc(db, "companies", companyName, "jobs", selectedJob);
-            const jobInCompanyDoc = await getDoc(jobInCompanyRef);
-            
-            if (!jobInCompanyDoc.exists()) {
-                // Get job data from the jobs collection
-                const jobRef = doc(db, "jobs", selectedJob);
-                const jobDoc = await getDoc(jobRef);
-                
-                if (jobDoc.exists()) {
-                    // Add job to the company's jobs collection
-                    await setDoc(jobInCompanyRef, {
-                        ...jobDoc.data(),
-                        companyName: companyName,
-                        employerId: auth.currentUser.uid,
-                        updatedAt: serverTimestamp
-                    });
-                } else {
-                    // If job doesn't exist, create a minimal entry
-                    await setDoc(jobInCompanyRef, {
-                        id: selectedJob,
-                        companyName: companyName,
-                        employerId: auth.currentUser.uid,
-                        createdAt: serverTimestamp()
-                    });
-                }
-            }
-            
-            // Add the applicant to the hired subcollection under the job
-            const hiredApplicantRef = doc(db, "companies", companyName, "jobs", selectedJob, "hired", selectedApplicant.id);
-            
-            await setDoc(hiredApplicantRef, {
-                ...selectedApplicant,
-                jobId: selectedJob,
-                companyName: companyName,
-                employerId: auth.currentUser.uid,
-                hiredAt: serverTimestamp
-            });
-
-            // 3. Delete applicant from jobs/{jobId}/applications
-            const applicationRef = doc(db, "jobs", selectedJob, "applications", selectedApplicant.id);
-
-                // Get the current data from the document before deleting it
-                const applicationSnapshot = await getDoc(applicationRef);
-
-                if (applicationSnapshot.exists()) {
-                // Add the data to the deletedFiles collection with a reference to the rejected applicant
-                await setDoc(doc(db, "deletedFiles", `hired-applicant-${selectedApplicant.id}`), {
-                    originalPath: `jobs/${selectedJob}/applications/${selectedApplicant.id}`,
-                    applicantData: applicationSnapshot.data(),
-                    deletedAt: serverTimestamp(),
-                    jobId: selectedJob
-                });
-                
-                // Now delete the original document
-                await deleteDoc(applicationRef);
-                } else {
-                console.error("Application document doesn't exist, cannot backup before deletion");
-                }
-
-            // 4. Update local state
-            setHiredApplicants(prev => ({
-                ...prev,
-                [selectedJob]: [...(prev[selectedJob] || []), selectedApplicant]
-            }));
-
-            alert(`${selectedApplicant.name} has been hired!`);
-            setSelectedApplicant(null);
-        } else {
-            alert("This applicant has already been hired!");
+          }
         }
+      }
+
+      // Option 2: If you have a specific job ID that you know needs to be checked
+      // (using the specific path you mentioned)
+      const specificJobId = "job_1746972169732";
+      if (specificJobId !== selectedJob) { // Only if it's different from the current job
+        const specificPathRef = doc(db, "jobs", specificJobId, "applications", selectedApplicant.id);
+        const specificDoc = await getDoc(specificPathRef);
+        
+        if (specificDoc.exists()) {
+          // Backup before deletion
+          await setDoc(doc(db, "deletedFiles", `hired-applicant-${selectedApplicant.id}-job-${specificJobId}`), {
+            originalPath: `jobs/${specificJobId}/applications/${selectedApplicant.id}`,
+            applicantData: specificDoc.data(),
+            deletedAt: serverTimestamp,
+            originalJobId: specificJobId,
+            hiredJobId: selectedJob,
+            hiredReference: `companies/${companyName}/jobs/${selectedJob}/hired/${selectedApplicant.id}`
+          });
+          
+          // Delete from the specific job's applications
+          await deleteDoc(specificPathRef);
+          console.log(`Removed applicant ${selectedApplicant.id} from job ${specificJobId}`);
+        }
+      }
+      
     } catch (error) {
-        console.error("Error hiring applicant:", error);
-        alert("Failed to hire applicant. Please try again.");
+      console.error("Error removing applicant from job applications:", error);
+      // Continue with the hiring process even if removal fails
     }
+    
+    // 7. Update local state
+    setHiredApplicants(prev => ({
+      ...prev,
+      [selectedJob]: [...(prev[selectedJob] || []), selectedApplicant]
+    }));
+    
+    alert(`${selectedApplicant.name} has been hired!`);
+    setSelectedApplicant(null);
+    
+  } catch (error) {
+    console.error("Error hiring applicant:", error);
+    alert("Failed to hire applicant. Please try again.");
+  }
 };
     // const handleHireApplicant = async () => {
     //     if (!selectedApplicant || !selectedJob) {
@@ -2815,7 +3012,10 @@ if (originalHiredDoc.exists()) {
                         }}>
                             <button 
                                 className="hire-btn" 
-                                onClick={handleHireApplicant}
+                                onClick={() => {
+                                handleHireApplicant();
+                                handleAcceptSend(selectedJob);
+                                }}
                                 style={{
                                     backgroundColor: '#2ecc71',
                                     color: '#fff',
@@ -2835,7 +3035,9 @@ if (originalHiredDoc.exists()) {
                             </button>
                             <button 
                                 className="reject-btn" 
-                                onClick={() => handleRejectApplicant(selectedApplicant, selectedJob)}
+                                onClick={() => {handleRejectApplicant(selectedApplicant, selectedJob);
+                                    handleRejectSend(selectedJob);
+                                }   }
                                 style={{
                                     backgroundColor: '#e74c3c',
                                     color: '#fff',

@@ -2621,37 +2621,167 @@ const AdminPage = () => {
   
   //   fetchUserApplications();
   // }, [selectedUser]);
+// useEffect(() => {
+//   if (!selectedUser?.name) return;
+
+//   const fetchUserApplications = async () => {
+//     setIsLoading(true);
+//     setError(null);
+
+//     try {
+//       const currentUserName = selectedUser.name;
+//       const userId = selectedUser.userId || selectedUser.id;
+
+//       const tempAppliedJobs = [];
+//       const tempHiredJobs = [];
+//       const jobDataCache = {};
+
+//       // Fetch all jobs
+//       const jobsSnapshot = await getDocs(collection(db, "jobs"));
+//       const jobDocs = jobsSnapshot.docs;
+
+//       // Prepare all application and job fetches in parallel
+//       const jobFetches = jobDocs.map(async (jobDoc) => {
+//         const jobId = jobDoc.id;
+//         const jobData = jobDoc.data();
+//         jobDataCache[jobId] = jobData;
+
+//         const applicationsRef = collection(db, "jobs", jobId, "applications");
+//         const applicationsSnap = await getDocs(applicationsRef);
+
+//         for (const appDoc of applicationsSnap.docs) {
+//           const appData = appDoc.data();
+
+//           if (appData.name === currentUserName) {
+//             tempAppliedJobs.push({
+//               id: jobId,
+//               title: jobData.title || "Untitled Job",
+//               companyName: jobData.companyName || "Tech-Innovators.inc",
+//               location: jobData.location || "No location specified",
+//               appliedAt: appData.appliedAt || new Date(),
+//               status: appData.status || "applied",
+//               applicantId: appData.userId || appData.id,
+//             });
+//             break;
+//           }
+//         }
+//       });
+
+//       await Promise.all(jobFetches);
+
+//       // Fetch from user profile appliedJobs if not already included
+//       if (Array.isArray(selectedUser.appliedJobs)) {
+//         for (const appliedJob of selectedUser.appliedJobs) {
+//           const jobId = appliedJob.id || appliedJob.jobId;
+//           if (
+//             jobId &&
+//             !tempAppliedJobs.some((job) => job.id === jobId) &&
+//             !tempHiredJobs.some((job) => job.id === jobId)
+//           ) {
+//             let jobData = jobDataCache[jobId];
+//             if (!jobData) {
+//               const jobDoc = await getDoc(doc(db, "jobs", jobId));
+//               if (jobDoc.exists()) jobData = jobDoc.data();
+//               jobDataCache[jobId] = jobData;
+//             }
+
+//             if (jobData) {
+//               tempAppliedJobs.push({
+//                 id: jobId,
+//                 title: jobData.title || "Untitled Job",
+//                 companyName: jobData.companyName || "Tech-Innovators.inc",
+//                 location: jobData.location || "No location specified",
+//                 appliedAt: appliedJob.appliedAt || new Date(),
+//                 status: "applied",
+//                 applicantId: userId,
+//               });
+//             }
+//           }
+//         }
+//       }
+
+//       // Optional: check hired jobs only if no result yet
+//       if (tempHiredJobs.length === 0) {
+//         const employersSnapshot = await getDocs(collection(db, "employers"));
+
+//         const hiredFetches = employersSnapshot.docs.map(async (employerDoc) => {
+//           const employerId = employerDoc.id;
+//           const hiredRef = collection(db, "employers", employerId, "hired");
+//           const hiredSnapshot = await getDocs(hiredRef);
+
+//           for (const hiredDoc of hiredSnapshot.docs) {
+//             const hiredData = hiredDoc.data();
+//             const jobId = hiredDoc.id;
+
+//             const userApplicant = hiredData.applicants?.find(
+//               (applicant) => applicant.name === currentUserName
+//             );
+
+//             if (userApplicant) {
+//               let jobData = jobDataCache[jobId];
+//               if (!jobData) {
+//                 const jobDoc = await getDoc(doc(db, "jobs", jobId));
+//                 if (jobDoc.exists()) jobData = jobDoc.data();
+//                 jobDataCache[jobId] = jobData;
+//               }
+
+//               tempHiredJobs.push({
+//                 id: jobId,
+//                 title: jobData?.title || "Untitled Job",
+//                 companyName: jobData?.companyName || "Tech-Innovators.inc",
+//                 location: jobData?.location || "No location specified",
+//                 appliedAt: userApplicant.appliedAt || new Date(),
+//                 status: "hired",
+//                 applicantId: userApplicant.id || userApplicant.userId || userId,
+//               });
+//             }
+//           }
+//         });
+
+//         await Promise.all(hiredFetches);
+//       }
+
+//       setAppliedJobs(tempAppliedJobs);
+//       setHiredJobs(tempHiredJobs);
+//     } catch (error) {
+//       console.error("Error fetching user applications:", error);
+//       setError("Failed to load job applications.");
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   fetchUserApplications();
+// }, [selectedUser]);
 useEffect(() => {
   if (!selectedUser?.name) return;
-
+  
   const fetchUserApplications = async () => {
     setIsLoading(true);
     setError(null);
-
+    
     try {
       const currentUserName = selectedUser.name;
       const userId = selectedUser.userId || selectedUser.id;
-
       const tempAppliedJobs = [];
       const tempHiredJobs = [];
       const jobDataCache = {};
-
+      
       // Fetch all jobs
       const jobsSnapshot = await getDocs(collection(db, "jobs"));
       const jobDocs = jobsSnapshot.docs;
-
+      
       // Prepare all application and job fetches in parallel
       const jobFetches = jobDocs.map(async (jobDoc) => {
         const jobId = jobDoc.id;
         const jobData = jobDoc.data();
         jobDataCache[jobId] = jobData;
-
+        
         const applicationsRef = collection(db, "jobs", jobId, "applications");
         const applicationsSnap = await getDocs(applicationsRef);
-
+        
         for (const appDoc of applicationsSnap.docs) {
           const appData = appDoc.data();
-
           if (appData.name === currentUserName) {
             tempAppliedJobs.push({
               id: jobId,
@@ -2666,9 +2796,9 @@ useEffect(() => {
           }
         }
       });
-
+      
       await Promise.all(jobFetches);
-
+      
       // Fetch from user profile appliedJobs if not already included
       if (Array.isArray(selectedUser.appliedJobs)) {
         for (const appliedJob of selectedUser.appliedJobs) {
@@ -2684,7 +2814,6 @@ useEffect(() => {
               if (jobDoc.exists()) jobData = jobDoc.data();
               jobDataCache[jobId] = jobData;
             }
-
             if (jobData) {
               tempAppliedJobs.push({
                 id: jobId,
@@ -2699,50 +2828,106 @@ useEffect(() => {
           }
         }
       }
-
-      // Optional: check hired jobs only if no result yet
+      
+      // Check for hired jobs - UPDATED for new structure
       if (tempHiredJobs.length === 0) {
-        const employersSnapshot = await getDocs(collection(db, "employers"));
-
-        const hiredFetches = employersSnapshot.docs.map(async (employerDoc) => {
-          const employerId = employerDoc.id;
-          const hiredRef = collection(db, "employers", employerId, "hired");
-          const hiredSnapshot = await getDocs(hiredRef);
-
-          for (const hiredDoc of hiredSnapshot.docs) {
-            const hiredData = hiredDoc.data();
-            const jobId = hiredDoc.id;
-
-            const userApplicant = hiredData.applicants?.find(
-              (applicant) => applicant.name === currentUserName
-            );
-
-            if (userApplicant) {
-              let jobData = jobDataCache[jobId];
-              if (!jobData) {
-                const jobDoc = await getDoc(doc(db, "jobs", jobId));
-                if (jobDoc.exists()) jobData = jobDoc.data();
-                jobDataCache[jobId] = jobData;
-              }
-
-              tempHiredJobs.push({
-                id: jobId,
-                title: jobData?.title || "Untitled Job",
-                companyName: jobData?.companyName || "Tech-Innovators.inc",
-                location: jobData?.location || "No location specified",
-                appliedAt: userApplicant.appliedAt || new Date(),
-                status: "hired",
-                applicantId: userApplicant.id || userApplicant.userId || userId,
-              });
+        // Get all companies
+        const companiesSnapshot = await getDocs(collection(db, "companies"));
+        
+        // Process each company
+        const companyFetches = companiesSnapshot.docs.map(async (companyDoc) => {
+          const companyName = companyDoc.id;
+          const companyData = companyDoc.data();
+          
+          // Get all jobs for this company
+          const companyJobsRef = collection(db, "companies", companyName, "jobs");
+          const companyJobsSnapshot = await getDocs(companyJobsRef);
+          
+          // Process each job
+          const jobFetches = companyJobsSnapshot.docs.map(async (jobDoc) => {
+            const jobId = jobDoc.id;
+            const jobData = jobDoc.data();
+            
+            // Store job data in cache if not already there
+            if (!jobDataCache[jobId]) {
+              jobDataCache[jobId] = jobData;
             }
-          }
+            
+            // Get all hired applicants for this job
+            const hiredRef = collection(db, "companies", companyName, "jobs", jobId, "hired");
+            const hiredSnapshot = await getDocs(hiredRef);
+            
+            // Check each hired applicant
+            for (const hiredDoc of hiredSnapshot.docs) {
+              const hiredData = hiredDoc.data();
+              
+              // Check if this is our user
+              if (hiredData.name === currentUserName) {
+                tempHiredJobs.push({
+                  id: jobId,
+                  title: jobDataCache[jobId]?.title || jobData?.title || "Untitled Job",
+                  companyName: companyName || jobData?.companyName || "Tech-Innovators.inc",
+                  location: jobData?.location || "No location specified",
+                  appliedAt: hiredData.appliedAt || hiredData.hiredAt || new Date(),
+                  status: "hired",
+                  applicantId: hiredDoc.id || hiredData.id || userId,
+                });
+                break;  // Found the user for this job, no need to check other hired docs
+              }
+            }
+          });
+          
+          await Promise.all(jobFetches);
         });
-
-        await Promise.all(hiredFetches);
+        
+        await Promise.all(companyFetches);
+        
+        // FALLBACK: Only if we didn't find any hired jobs in the new structure,
+        // check the legacy structure for backward compatibility
+        if (tempHiredJobs.length === 0) {
+          console.log("No hired jobs found in new structure, checking legacy structure");
+          
+          const employersSnapshot = await getDocs(collection(db, "employers"));
+          const hiredFetches = employersSnapshot.docs.map(async (employerDoc) => {
+            const employerId = employerDoc.id;
+            const hiredRef = collection(db, "employers", employerId, "hired");
+            const hiredSnapshot = await getDocs(hiredRef);
+            
+            for (const hiredDoc of hiredSnapshot.docs) {
+              const hiredData = hiredDoc.data();
+              const jobId = hiredDoc.id;
+              const userApplicant = hiredData.applicants?.find(
+                (applicant) => applicant.name === currentUserName
+              );
+              
+              if (userApplicant) {
+                let jobData = jobDataCache[jobId];
+                if (!jobData) {
+                  const jobDoc = await getDoc(doc(db, "jobs", jobId));
+                  if (jobDoc.exists()) jobData = jobDoc.data();
+                  jobDataCache[jobId] = jobData;
+                }
+                
+                tempHiredJobs.push({
+                  id: jobId,
+                  title: jobData?.title || "Untitled Job",
+                  companyName: jobData?.companyName || "Tech-Innovators.inc",
+                  location: jobData?.location || "No location specified",
+                  appliedAt: userApplicant.appliedAt || new Date(),
+                  status: "hired",
+                  applicantId: userApplicant.id || userApplicant.userId || userId,
+                });
+              }
+            }
+          });
+          
+          await Promise.all(hiredFetches);
+        }
       }
-
+      
       setAppliedJobs(tempAppliedJobs);
       setHiredJobs(tempHiredJobs);
+      
     } catch (error) {
       console.error("Error fetching user applications:", error);
       setError("Failed to load job applications.");
@@ -2750,10 +2935,9 @@ useEffect(() => {
       setIsLoading(false);
     }
   };
-
+  
   fetchUserApplications();
 }, [selectedUser]);
-
   
   const addHistoryRecord = async (event, details) => {
     const timestamp = new Date().toISOString(); // Get current timestamp
@@ -3238,39 +3422,53 @@ const handleRejectUser = async (user) => {
     const applicants = applicantsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     setJobApplicants(applicants);
   };
-  const handleHiredClick = async (job) => {
-    console.log("Received job object:", job);
-  
-    if (!job || !job.employerId) {
-      console.error("Missing job or employerId");
+const handleHiredClick = async (job) => {
+  console.log("Received job object:", job);
+
+  if (!job || !job.companyName) {
+    console.error("Missing job or company name");
+    return;
+  }
+
+  setSelectedJob(job);
+  setViewingHired(true);
+
+  try {
+    // Get the company name (previously we were using employerId incorrectly as the company name)
+    const companyName = job.companyName;
+    
+    // Access the hired subcollection under the specific job
+    const hiredApplicantsRef = collection(
+      db, 
+      "companies", 
+      companyName,
+      "jobs",
+      job.id,
+      "hired"
+    );
+    
+    const hiredApplicantsSnapshot = await getDocs(hiredApplicantsRef);
+    
+    if (hiredApplicantsSnapshot.empty) {
+      console.log("No hired applicants found for this job");
+      setHiredJobData([]);
       return;
     }
-  
-    setSelectedJob(job);
-    setViewingHired(true);
-  
-    try {
-      const hiredJobsRef = collection(db, "employers", job.employerId, "hired");
-      const hiredJobsSnapshot = await getDocs(hiredJobsRef);
-      const allHiredJobs = hiredJobsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-  
-      const matched = allHiredJobs.find((h) => h.id === job.id);
-  
-      if (!matched || !matched.applicants) {
-        setHiredJobData([]);
-        return;
-      }
-  
-      console.log("Setting hiredJobData to applicants:", matched.applicants);
-      setHiredJobData(matched.applicants); // ✅ Set directly to array
-  
-    } catch (error) {
-      console.error("Error fetching hired jobs:", error);
-    }
-  };
+    
+    // Map the documents to array of applicant data
+    const hiredApplicants = hiredApplicantsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    console.log("Setting hiredJobData to applicants:", hiredApplicants);
+    setHiredJobData(hiredApplicants);
+
+  } catch (error) {
+    console.error("Error fetching hired applicants:", error);
+    setHiredJobData([]);
+  }
+};
   
   
   
@@ -4773,10 +4971,49 @@ const handlePublishJob = async (job) => {
               <strong>Email:</strong> {selectedApplicant.email}
             </p>
             <p>
-              <strong>Resume:</strong>{" "}
-              <a href={selectedApplicant.resumeURL} target="_blank" rel="noopener noreferrer">
-                View Resume
-              </a>
+            {selectedApplicant.certifications && (
+              <div className="mt-4">
+                <p className="font-semibold text-gray-700 mb-2">Certifications:</p>
+                <div className="space-y-4">
+                  {Object.entries(selectedApplicant.certifications).map(([category, certs]) => 
+                    certs.length > 0 && (
+                      <div key={category} className="bg-white border border-gray-200 rounded-md overflow-hidden">
+                        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                          <h4 className="font-medium text-gray-700">{category}</h4>
+                        </div>
+                        <div className="p-0">
+                          {certs.map((cert, idx) => (
+                            <div key={idx} className="p-4 border-b border-gray-100 last:border-b-0">
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="font-medium text-gray-800">{cert.name}</span>
+                                  <span className="text-sm text-gray-500">ID: {cert.credentialID}</span>
+                                </div>
+                                <div className="text-sm text-gray-600">Issued by {cert.issuer}</div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                  <span>Issued: {new Date(cert.issueDate).toLocaleDateString()}</span>
+                                  <span>Expires: {new Date(cert.expiryDate).toLocaleDateString()}</span>
+                                </div>
+                                {cert.imageURL && (
+                                  <div className="mt-2">
+                                    <img 
+                                      src={cert.imageURL} 
+                                      alt={`${cert.name} Certificate`} 
+                                      style={{ width: '100%', height: 'auto' }} 
+                                    />
+
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
             </p>
             <button
               onClick={handleCloseApplicantModal}
