@@ -1558,7 +1558,7 @@ const Auth = ({ userType, setUser }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (validatePassword(password)) {
-            alert("✅ Password is valid! All rules are met.");
+            // alert("✅ Password is valid! All rules are met.");
             try {
             let userCredential;
     
