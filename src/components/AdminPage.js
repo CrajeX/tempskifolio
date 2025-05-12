@@ -3369,6 +3369,79 @@ const handleRejectUser = async (user) => {
       alert("Invalid credentials");
     }
   };
+  const handleUserClickWithStatusCheck = async (user, userType) => {
+  try {
+    // Validate input
+    if (!user || !userType) {
+      throw new Error("User and user type must be provided");
+    }
+
+    // Ensure userType is either "Applicants" or "Employers"
+    const validatedUserType = 
+      userType === "applicants" ? "applicants" : 
+      userType === "employers" ? "amployers" : 
+      null;
+
+    if (!validatedUserType) {
+      throw new Error("Invalid user type. Must be 'Applicants' or 'Employers'");
+    }
+    
+    // First, fetch the user's current status
+    const userStatus = await fetchUserStatus(user.id, validatedUserType);
+    
+    // Update the user object with the fetched status
+    const updatedUser = {
+      ...user,
+      disabled: userStatus.disabled
+    };
+    
+    // Then proceed with handling user click
+    handleUserClick(updatedUser);
+    
+  } catch (error) {
+    console.error("Error fetching user status:", error);
+    
+    // Fallback to original handleUserClick if status fetch fails
+    handleUserClick(user);
+    
+    // Optionally show an alert about status fetch failure
+    alert("Could not retrieve user status. Proceeding with available information.");
+  }
+};
+
+// Example usage in Employers Table
+{selectedUserType === "Employers" &&
+  employers.map((employer) => (
+    <tr key={employer.id || employer.userId}>
+      <td style={{ border: "1px solid #ddd", padding: "10px" }}>{employer.companyName}</td>
+      <td style={{ border: "1px solid #ddd", padding: "10px" }}>
+        <a
+          href={employer.companyWebsite}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#007bff", textDecoration: "none" }}
+        >
+          {employer.companyWebsite}
+        </a>
+      </td>
+      <td style={{ border: "1px solid #ddd", padding: "10px", textAlign: "center" }}>
+        <button
+          onClick={() => handleUserClickWithStatusCheck(employer, "employers")}
+          style={{
+            padding: "5px 10px",
+            backgroundColor: "#007bff",
+            color: "#fff",
+            border: "none",
+            borderRadius: "3px",
+            cursor: "pointer",
+          }}
+        >
+          View
+        </button>
+      </td>
+    </tr>
+  ))
+}
   // Handle Applicant Click
   const handleUserClick = async (user) => {
     if (selectedUserType === "Applicants") {
@@ -3604,36 +3677,88 @@ const openHiredModal = (jobData) => {
     }
 }
     };
-     const handleToggleUserStatus = async (userId, disableStatus) => {
-    try {
-      // Determine the correct collection based on user type
-      const collectionName = selectedUserType === "Applicants" ? "applicants" : "employers";
-      
-      // Log the action for debugging
-      console.log(`Updating user ${userId} in collection ${collectionName} with disabled status: ${disableStatus}`);
-      
-      // Reference to the user document
-      const userRef = doc(db, collectionName, userId);
-      
-      // Update the disabled status
-      await updateDoc(userRef, {
-        disabled: disableStatus
-      });
-      
-      // Update the local state to reflect changes immediately
-      setSelectedUser(prev => ({
-        ...prev,
-        disabled: disableStatus
-      }));
-      
-      // Show success notification to admin
-      alert(`User account has been ${disableStatus ? "disabled" : "enabled"} successfully.`);
-      
-    } catch (error) {
-      console.error("Error updating user status:", error);
-      alert(`Failed to ${disableStatus ? "disable" : "enable"} user account. Please try again: ${error.message}`);
+    const fetchUserStatus = async (userId, userType) => {
+  try {
+    // Determine the correct collection based on user type
+    const collectionName = userType === "applicants" ? "applicants" : "employers";
+    
+    // Log the action for debugging
+    console.log(`Fetching status for user ${userId} in collection ${collectionName}`);
+    
+    // Reference to the user document
+    const userRef = doc(db, collectionName, userId);
+    
+    // Fetch the user document
+    const userDoc = await getDoc(userRef);
+    
+    // Check if the document exists
+    if (!userDoc.exists()) {
+      throw new Error("User document not found");
     }
-  };
+    
+    // Extract and return the disabled status
+    const disabledStatus = userDoc.data().disabled || false;
+    
+    console.log(`User status retrieved: ${disabledStatus}`);
+    
+    return {
+      userId,
+      disabled: disabledStatus
+    };
+    
+  } catch (error) {
+    console.error("Error fetching user status:", error);
+    throw error; // Re-throw to allow caller to handle the error
+  }
+};
+const handleToggleUserStatus = async (userId, intendedDisableStatus) => {
+  try {
+    // Determine the correct collection based on user type
+    const collectionName = selectedUserType === "Applicants" ? "applicants" : "employers";
+    
+    // Reference to the user document
+    const userRef = doc(db, collectionName, userId);
+    
+    // Fetch the current user document to check existing status
+    const userDoc = await getDoc(userRef);
+    
+    // Check if the document exists
+    if (!userDoc.exists()) {
+      throw new Error("User document not found");
+    }
+    
+    // Get the current disabled status
+    const currentDisabledStatus = userDoc.data().disabled || false;
+    
+    // Log the action for debugging
+    console.log(`Current user status: ${currentDisabledStatus}, Intended status: ${intendedDisableStatus}`);
+    
+    // Check if the status is already set to the intended status
+    if (currentDisabledStatus === intendedDisableStatus) {
+      console.log(`User is already ${intendedDisableStatus ? "disabled" : "enabled"}`);
+      alert(`User account is already ${intendedDisableStatus ? "disabled" : "enabled"}.`);
+      return;
+    }
+    
+    // Update the disabled status
+    await updateDoc(userRef, {
+      disabled: intendedDisableStatus
+    });
+    
+    // Update the local state to reflect changes immediately
+    setSelectedUser(prev => ({
+      ...prev,
+      disabled: intendedDisableStatus
+    }));
+    
+    // Show success notification to admin
+    alert(`User account has been ${intendedDisableStatus ? "disabled" : "enabled"} successfully.`);
+    
+  } catch (error) {
+    console.error("Error updating user status:", error);
+    alert(`Failed to ${intendedDisableStatus ? "disable" : "enable"} user account. Please try again: ${error.message}`);
+  }
+};
 
 
 const handleHiredApplicantClick = (applicant) => {
@@ -4307,7 +4432,9 @@ const handlePublishJob = async (job) => {
                   </td>
                   <td style={{ border: "1px solid #ddd", padding: "10px", textAlign: "center" }}>
                     <button
-                      onClick={() => handleUserClick(applicant)}
+                      onClick={() => {handleUserClick(applicant);
+                        handleUserClickWithStatusCheck(applicant, "applicants")
+                      }}
                       style={{
                         padding: "5px 10px",
                         backgroundColor: "#007bff",
@@ -4340,7 +4467,9 @@ const handlePublishJob = async (job) => {
                   </td>
                   <td style={{ border: "1px solid #ddd", padding: "10px", textAlign: "center" }}>
                     <button
-                      onClick={() => handleUserClick(employer)}
+                      onClick={() => {handleUserClick(employer);
+                        handleUserClickWithStatusCheck(employer, "Employers")}
+                      }
                       style={{
                         padding: "5px 10px",
                         backgroundColor: "#007bff",
