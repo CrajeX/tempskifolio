@@ -4495,7 +4495,7 @@ const handlePublishJob = async (job) => {
               <p>No applied jobs found.</p>
             )}
 
-            <h3>Hired Jobs</h3>
+            <h3>Accepted Applications</h3>
             {hiredJobs.length > 0 ? (
               <ul>
                 {hiredJobs.map((job, index) => (
