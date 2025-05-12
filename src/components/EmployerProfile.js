@@ -991,7 +991,7 @@ const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
     const hiredApplicantDoc = await getDoc(hiredApplicantRef);
     
     if (hiredApplicantDoc.exists()) {
-      alert("This applicant has already been hired!");
+      alert("This applicantion has already been accepted");
       return;
     }
     
@@ -1119,7 +1119,7 @@ const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
     
   } catch (error) {
     console.error("Error hiring applicant:", error);
-    alert("Failed to hire applicant. Please try again.");
+    alert("Failed to accept applicantion. Please try again.");
   }
 };
     // const handleHireApplicant = async () => {
@@ -2027,7 +2027,7 @@ const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
                                                     flex: "1"
                                                 }}
                                             >
-                                                View Hired
+                                                View Accepted Applications
                                             </button>
                                             
                                         </div>
@@ -2215,7 +2215,7 @@ const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
                                                     fontWeight: '600',
                                                     color: '#333'
                                                 }}>
-                                                    Hired Applicants ({hiredApplicants[job.id]?.length || 0})
+                                                    Accepted Applications ({hiredApplicants[job.id]?.length || 0})
                                                 </h5>
                                                 <div style={{
                                                     maxHeight: '300px',
@@ -3031,7 +3031,7 @@ const handleRemoveHiredEmployee = async (hiredEmployee, jobId) => {
                                     alignItems: 'center'
                                 }}
                             >
-                                <span style={{ marginRight: '8px' }}>✅</span> Hire Applicant
+                                <span style={{ marginRight: '8px' }}>✅</span> Accept Application
                             </button>
                             <button 
                                 className="reject-btn" 

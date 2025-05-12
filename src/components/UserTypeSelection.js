@@ -75,7 +75,7 @@ const Home = ({ setUserType }) => {
                             <Link to="/signup">
                                 <button className="submit">Sign Up</button>
                             </Link>
-                            <button className="submit" onClick={handleChangeRole}>Change Role</button>
+                            <button className="submit" onClick={handleChangeRole}>Cancel</button>
                         </div>
                         </AnimatedGroup>
                     )}

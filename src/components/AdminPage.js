@@ -3844,14 +3844,15 @@ const handlePublishJob = async (job) => {
   
   if (!isAdmin) {
     return (
-        <div style={{ 
+        <div  style={{ 
             display: "flex", 
             justifyContent: "center", 
             alignItems: "center", 
             minHeight: "80vh",  // Adjusted height
             fontFamily: "Arial, sans-serif"
         }}>
-            <form onSubmit={handleLogin} style={{ 
+          <div></div>
+            <form  className = "admin-login" onSubmit={handleLogin} style={{ 
                 display: "flex", 
                 flexDirection: "column", 
                 alignItems: "center", 
@@ -3860,7 +3861,7 @@ const handlePublishJob = async (job) => {
                 padding: "60px 40px", // More compact
                 borderRadius: "10px", 
                 boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", 
-                background: "white",
+                
                 textAlign: "center"
             }}>
                 <h2 style={{ marginBottom: "15px", fontFamily: "Times New Roman" }}>Admin Login</h2>
@@ -3981,7 +3982,7 @@ const handlePublishJob = async (job) => {
         width: "100%",
         marginBottom: "10px",
         padding: "10px",
-        backgroundColor: showDashboard ? "#007bff" : "#ddd",
+        backgroundColor: showDashboard ? "#007bff" : "#85DFFF",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
@@ -4010,7 +4011,7 @@ const handlePublishJob = async (job) => {
         width: "100%",
         marginBottom: "10px",
         padding: "10px",
-        backgroundColor: selectedUserType === "Applicants" && !isUserClassVisible ? "#007bff" : "#ddd",
+        backgroundColor: selectedUserType === "Applicants" && !isUserClassVisible ? "#007bff" : "#85DFFF",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
@@ -4036,7 +4037,7 @@ const handlePublishJob = async (job) => {
           width: "100%",
           marginBottom: "10px",
           padding: "10px",
-          backgroundColor: selectedUserType === "Report" ? "#007bff" : "#ddd",
+          backgroundColor: selectedUserType === "Report" ? "#007bff" : "#85DFFF",
           color: "#fff",
           border: "none",
           borderRadius: "5px",
@@ -4062,7 +4063,7 @@ const handlePublishJob = async (job) => {
         width: "100%",
         marginBottom: "10px",
         padding: "10px",
-        backgroundColor: selectedUserType === "Employers" && !isUserClassVisible ? "#007bff" : "#ddd",
+        backgroundColor: selectedUserType === "Employers" && !isUserClassVisible ? "#007bff" : "#85DFFF",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
@@ -4085,7 +4086,7 @@ const handlePublishJob = async (job) => {
         width: "100%",
         marginBottom: "10px",
         padding: "10px",
-        backgroundColor: isUserClassVisible && !isUserApproval && !historyVisible ? "#007bff" : "#ddd",
+        backgroundColor: isUserClassVisible && !isUserApproval && !historyVisible ? "#007bff" : "#85DFFF",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
@@ -4111,7 +4112,7 @@ const handlePublishJob = async (job) => {
         width: "100%",
         marginBottom: "10px",
         padding: "10px",
-        backgroundColor: isUserApproval && !historyVisible ? "#007bff" : "#ddd",
+        backgroundColor: isUserApproval && !historyVisible ? "#007bff" : "#85DFFF",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
@@ -4137,7 +4138,7 @@ const handlePublishJob = async (job) => {
         width: "100%",
         marginBottom: "10px",
         padding: "10px",
-        backgroundColor: showDeletedFiles ? "#007bff" : "#ddd",
+        backgroundColor: showDeletedFiles ? "#007bff" : "#85DFFF",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
@@ -4190,7 +4191,7 @@ const handlePublishJob = async (job) => {
         width: "100%",
         marginBottom: "10px",
         padding: "10px",
-        backgroundColor: announcementVisible ? "#007bff" : "#ddd",
+        backgroundColor: announcementVisible ? "#007bff" : "#85DFFF",
         color: "#fff",
         border: "none",
         borderRadius: "5px",
@@ -4485,7 +4486,7 @@ const handlePublishJob = async (job) => {
                     <p><strong>Job Title:</strong> {job.title}</p>
                     <p><strong>Location:</strong> {job.location}</p>
                     <p><strong>Applied At:</strong> {job.appliedAt?.toDate ? job.appliedAt.toDate().toLocaleString() : "N/A"}</p>
-                    <p><strong>Status:</strong> {job.status}</p>
+                    {/* <p><strong>Status:</strong> {job.status}</p> */}
                     <p><small>Application ID: {job.applicantId}</small></p>
                   </li>
                 ))}
@@ -4501,9 +4502,9 @@ const handlePublishJob = async (job) => {
                   <li key={`hired-${job.id || index}`} className="job-item">
                     <p><strong>Job Title:</strong> {job.title}</p>
                     <p><strong>Location:</strong> {job.location}</p>
-                    <p><strong>Hired By:</strong> {job.companyName}</p>
-                    <p><strong>Hired At:</strong> {job.appliedAt?.toDate ? job.appliedAt.toDate().toLocaleString() : "N/A"}</p>
-                    <p><strong>Status:</strong> {job.status}</p>
+                    <p><strong>Accepted By:</strong> {job.companyName}</p>
+                    <p><strong>Accepted At:</strong> {job.appliedAt?.toDate ? job.appliedAt.toDate().toLocaleString() : "N/A"}</p>
+                    {/* <p><strong>Status:</strong> {job.status}</p> */}
                     <p><small>Application ID: {job.applicantId}</small></p>
                   </li>
                 ))}
@@ -4562,7 +4563,7 @@ const handlePublishJob = async (job) => {
                     handleHiredClick(job);
                     setShowApplicant(false);
                   }} style={{ cursor: "pointer" }}>
-                    View Hired
+                    View Accepted Applications
                   </button>
                    <button onClick={() => {
                 handleDeleteJob(job.id);
@@ -4714,7 +4715,7 @@ const handlePublishJob = async (job) => {
         alignItems: "center", 
         marginBottom: "15px" 
       }}>
-        <h4 style={{ margin: 0 }}>Hired Applicants</h4>
+        <h4 style={{ margin: 0 }}>Accepted Applicant</h4>
         <button 
           onClick={() => {
             setViewingHired(false);
@@ -5182,6 +5183,7 @@ const handlePublishJob = async (job) => {
                 <thead>
                     <tr>
                         <th style={{ border: "1px solid #ddd", padding: "10px" }}>Name/Company</th>
+                        <th style={{ border: "1px solid #ddd", padding: "10px" }}>Github Repo / Company Website</th>
                         <th style={{ border: "1px solid #ddd", padding: "10px" }}>Email</th>
                         <th style={{ border: "1px solid #ddd", padding: "10px" }}>Type</th>
                         <th style={{ border: "1px solid #ddd", padding: "10px" }}>Actions</th>
@@ -5191,6 +5193,7 @@ const handlePublishJob = async (job) => {
                     {usersToApprove.map((user) => (
                         <tr key={user.id}>
                             <td style={{ border: "1px solid #ddd", padding: "10px" }}>{user.type === "applicant" ? user.name : user.companyName}</td>
+                            <td style={{ border: "1px solid #ddd", padding: "10px" }}>{user.type === "applicant" ? user.githubRepo : user.companyWebsite}</td>
                             <td style={{ border: "1px solid #ddd", padding: "10px" }}>{user.email}</td>
                             <td style={{ border: "1px solid #ddd", padding: "10px" }}>{user.type}</td>
                             <td style={{ border: "1px solid #ddd", padding: "10px" }}>
@@ -5393,7 +5396,7 @@ const handlePublishJob = async (job) => {
             }}
           />
 
-
+{/* 
           <div>
           <label htmlFor="image-upload" style={{ marginBottom: '10px', display: 'block' }}>
             Upload Image:
@@ -5405,7 +5408,7 @@ const handlePublishJob = async (job) => {
             onChange={handleImageUpload}
             style={{ marginBottom: '10px' }}
           />
-        </div>
+        </div> */}
 
 
           {/* Recipient Dropdown */}

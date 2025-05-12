@@ -88,7 +88,7 @@ const SignInOrSignUp = () => {
                 <button>Sign Up</button>
             </Link>
             <Link to={`/`}>
-                <button>Change Role</button>
+                <button>Cancel</button>
             </Link>
         </div>
         </div>

@@ -1156,7 +1156,7 @@ import PageTemplate, {
 import { BadgeInfoIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import React, { useState,useEffect } from 'react';
-
+import emailjs from "emailjs-com"; // or "@emailjs/browser" depending on your setup
 
 import { ChevronLeft, ChevronRight, Move, X, Check, Mail } from 'lucide-react';
 
@@ -1453,7 +1453,7 @@ const Terms = ({ onClose, onAgree }) => {
   };
 // Main Auth Component
 const Auth = ({ userType, setUser }) => {
-  
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -1623,6 +1623,54 @@ const Auth = ({ userType, setUser }) => {
                 await batch.commit();
                 
                 alert('A verification email has been sent. Please verify before signing in.');
+                
+                    // Prepare email template parameters
+                   emailjs.init("1hCXoeKVFq8hm9LEx"); // Replace with your actual EmailJS public key
+                    const templateParams = {
+                      email: userData.email,
+                      html: `
+                        <div style="font-family: system-ui, sans-serif, Arial; font-size: 16px; background-color: #fff8f1; color: #333;">
+                          <div style="max-width: 600px; margin: auto; padding: 16px; text-align: left;">
+                            <h1 style="color: #fc0038; margin-bottom: 20px;">Account Verification in Progress</h1>
+                            
+                            <p>Dear User,</p>
+                            
+                            <p>Thank you for creating an account with Ski-Folio. We're currently reviewing your account details to ensure the security and integrity of our platform.</p>
+                            
+                            <h2 style="color: #fc0038; margin-top: 20px;">What happens next:</h2>
+                            <ul style="padding-left: 20px; margin-bottom: 20px;">
+                              <li>Our team is verifying the information you provided</li>
+                              <li>This process typically takes 1-2 business days</li>
+                              <li>You'll receive a confirmation email once your account is approved</li>
+                            </ul>
+                            
+                            <p>If you have any questions or need to provide additional information, please contact our support team:</p>
+                            <p>
+                              Email: <a href="mailto:skifolio.help@gmail.com" style="color: #fc0038;">skifolio.help@gmail.com</a><br>
+                              Phone: (+63) 977 096 0443
+                            </p>
+                            
+                            <p>We appreciate your patience and look forward to welcoming you to our community!</p>
+                            
+                            <p>Best regards,<br>The Ski-Folio Team</p>
+                            
+                            <p style="margin-top: 20px; font-size: 12px; color: #666;">
+                              If you did not create this account, please ignore this email or contact our support team.
+                            </p>
+                          </div>
+                        </div>
+                      `
+                    };
+                
+                    // Send the email using EmailJS
+                    const response = await emailjs.send(
+                      // "service_mu4w5ko", // Your EmailJS service ID
+                      "service_i0d7mwo",
+                      "template_3x8950d", // Your EmailJS template ID
+                      templateParams
+                    );
+                
+                    console.log("Email sent:", response.status, response.text);
                 await signOut(auth);
                 navigate('/');
                 return;
@@ -1743,7 +1791,11 @@ const Auth = ({ userType, setUser }) => {
         <div className="hero" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
             <div className="choicecontainer2" style={{ textAlign: 'center', width: '100%', maxWidth: '400px' }}>
                 <form onSubmit={handleSubmit} id="formauth" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                    <AnimatedHeading style={{ fontFamily: "times new roman" }}>{isSignUp ? 'Sign Up' : 'Sign In'} as {userType}</AnimatedHeading>
+                    <AnimatedHeading className="fancy-heading">
+                      {userType.charAt(0).toUpperCase() + userType.slice(1)} {isSignUp ? 'Sign Up' : 'Sign In'}
+                    </AnimatedHeading>
+
+
 
                     <input className="inputs" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ marginBottom: '10px', width: '100%' }} />
                     

@@ -1197,7 +1197,22 @@ return (
         }}
       >
         <h3>{expandedJob.title}</h3>
-        <p><strong>Posted On:</strong> {new Date(expandedJob.createdAt.seconds * 1000).toLocaleDateString()}</p>
+     <p><strong>Posted Date/Time:</strong> {
+      (() => {
+        const createdAt = new Date(expandedJob.createdAt.seconds * 1000);
+        const now = new Date();
+        const diffMs = now - createdAt;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+        if (diffHours < 48) {
+          return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+        } else {
+          const diffDays = Math.floor(diffHours / 24);
+          return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+        }
+      })()
+    }</p>
+
         <p><strong>Company:</strong> {expandedJob.companyName}</p>
         <p><strong>Role:</strong> {expandedJob.jobRole}</p>
         <p><strong>Location:</strong> {expandedJob.location}</p>

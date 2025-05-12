@@ -1091,13 +1091,20 @@ const EmployerSkillFilter = () => {
                     <div key={category} className="sc-applicant-cert-category">
                       <h4 className="sc-applicant-cert-title">{category}</h4>
                       <div className="sc-applicant-cert-images">
-                        {urls.map((url, i) => (
-                          <img key={i} 
-                              src={url} 
-                              alt={`${category} certification ${i+1}`} 
-                              className="sc-applicant-cert-img"
-                          />
-                        ))}
+                        {urls.length === 0 ? (
+                  <p>No certifications.</p>
+                ) : (
+                  urls.map((cert, index) => (
+                    <div key={index} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
+                      <img src={cert.imageURL} alt={cert.name} style={{ width: "200px" }} />
+                      <p><strong>Name:</strong> {cert.name}</p>
+                      <p><strong>Issuer:</strong> {cert.issuer}</p>
+                      <p><strong>Issue Date:</strong> {cert.issueDate}</p>
+                      <p><strong>Expiry Date:</strong> {cert.expiryDate}</p>
+                      <p><strong>Credential ID:</strong> {cert.credentialID}</p>
+                    </div>
+                  ))
+                )}
                       </div>
                     </div>
                   ))}

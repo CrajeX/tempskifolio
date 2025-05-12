@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { Link } from "react-router-dom";
 import PageTemplate, { 
   AnimatedHeading, 
   AnimatedParagraph, 
@@ -104,7 +105,7 @@ const SignIn = () => {
         <div className='hero' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
             <div className='choicecontainer' style={{ textAlign: 'center', width: '100%', maxWidth: '400px' }}>
                 <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
-                    <h2 style={{ fontFamily: "Times New Roman" }}>Log In</h2>
+                    <h2 className="fancy-heading">Log In</h2>
                     
                     {error && (
                         <div style={{ 
@@ -165,6 +166,10 @@ const SignIn = () => {
                     </div>
 
                     <button className="input-submit" type="submit">Log In</button>
+                     
+                     <Link to={`/select`}>
+                                     <button className="submit">Cancel</button>
+                                 </Link>
                     <p onClick={handleForgotPassword} style={{ marginTop: '10px', cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}>Forgot Password?</p>
                 </form>
             </div>
