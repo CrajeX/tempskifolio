@@ -4468,7 +4468,7 @@ const handlePublishJob = async (job) => {
                   <td style={{ border: "1px solid #ddd", padding: "10px", textAlign: "center" }}>
                     <button
                       onClick={() => {handleUserClick(employer);
-                        handleUserClickWithStatusCheck(employer, "Employers")}
+                        handleUserClickWithStatusCheck(employer, "employers")}
                       }
                       style={{
                         padding: "5px 10px",
