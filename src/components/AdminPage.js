@@ -3379,7 +3379,7 @@ const handleRejectUser = async (user) => {
     // Ensure userType is either "Applicants" or "Employers"
     const validatedUserType = 
       userType === "applicants" ? "applicants" : 
-      userType === "employers" ? "amployers" : 
+      userType === "employers" ? "employers" : 
       null;
 
     if (!validatedUserType) {
@@ -3714,7 +3714,7 @@ const openHiredModal = (jobData) => {
 const handleToggleUserStatus = async (userId, intendedDisableStatus) => {
   try {
     // Determine the correct collection based on user type
-    const collectionName = selectedUserType === "Applicants" ? "applicants" : "employers";
+    const collectionName = selectedUserType === "applicants" ? "applicants" : "employers";
     
     // Reference to the user document
     const userRef = doc(db, collectionName, userId);
