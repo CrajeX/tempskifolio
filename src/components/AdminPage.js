@@ -3696,25 +3696,67 @@ const openHiredModal = (jobData) => {
       throw new Error("User document not found");
     }
     
-    // Extract and return the disabled status
-    const disabledStatus = userDoc.data().disabled || false;
+    // Extract user data
+    const userData = userDoc.data();
     
-    console.log(`User status retrieved: ${disabledStatus}`);
+    // Determine disabled status (use the disabled field directly)
+    const disabledStatus = userData.disabled || false;
     
-    return {
+    // Additional status checks based on the document structure
+    const accountStatus = {
       userId,
-      disabled: disabledStatus
+      disabled: disabledStatus,
+      status: userData.status || 'pending', // Use status field if it exists
+      scoutVisibility: userData.scoutVisibility || false
     };
+    
+    console.log(`User status retrieved:`, accountStatus);
+    
+    return accountStatus;
     
   } catch (error) {
     console.error("Error fetching user status:", error);
     throw error; // Re-throw to allow caller to handle the error
   }
 };
+//     const fetchUserStatus = async (userId, userType) => {
+//   try {
+//     // Determine the correct collection based on user type
+//     const collectionName = userType === "applicants" ? "applicants" : "employers";
+    
+//     // Log the action for debugging
+//     console.log(`Fetching status for user ${userId} in collection ${collectionName}`);
+    
+//     // Reference to the user document
+//     const userRef = doc(db, collectionName, userId);
+    
+//     // Fetch the user document
+//     const userDoc = await getDoc(userRef);
+    
+//     // Check if the document exists
+//     if (!userDoc.exists()) {
+//       throw new Error("User document not found");
+//     }
+    
+//     // Extract and return the disabled status
+//     const disabledStatus = userDoc.data().disabled || false;
+    
+//     console.log(`User status retrieved: ${disabledStatus}`);
+    
+//     return {
+//       userId,
+//       disabled: disabledStatus
+//     };
+    
+//   } catch (error) {
+//     console.error("Error fetching user status:", error);
+//     throw error; // Re-throw to allow caller to handle the error
+//   }
+// };
 const handleToggleUserStatus = async (userId, intendedDisableStatus) => {
   try {
-    // Determine the correct collection based on user type
-    const collectionName = selectedUserType === "applicants" ? "applicants" : "employers";
+    // Determine the correct collection based on user type (note the capitalization)
+    const collectionName = selectedUserType === "Applicants" ? "applicants" : "employers";
     
     // Reference to the user document
     const userRef = doc(db, collectionName, userId);
@@ -3724,11 +3766,15 @@ const handleToggleUserStatus = async (userId, intendedDisableStatus) => {
     
     // Check if the document exists
     if (!userDoc.exists()) {
-      throw new Error("User document not found");
+      console.error(`Document not found for user ${userId} in collection ${collectionName}`);
+      throw new Error(`User document not found for ID: ${userId}`);
     }
     
+    // Get the current user data
+    const userData = userDoc.data();
+    
     // Get the current disabled status
-    const currentDisabledStatus = userDoc.data().disabled || false;
+    const currentDisabledStatus = userData.disabled || false;
     
     // Log the action for debugging
     console.log(`Current user status: ${currentDisabledStatus}, Intended status: ${intendedDisableStatus}`);
@@ -3759,7 +3805,6 @@ const handleToggleUserStatus = async (userId, intendedDisableStatus) => {
     alert(`Failed to ${intendedDisableStatus ? "disable" : "enable"} user account. Please try again: ${error.message}`);
   }
 };
-
 
 const handleHiredApplicantClick = (applicant) => {
   if (selectedHiredApplicant && selectedHiredApplicant.name === applicant.name) {
