@@ -4848,7 +4848,7 @@ const handlePublishJob = async (job) => {
   </ul>
 ) : (
   <div className="flex flex-col items-center justify-center py-12 px-4">
-    <p className="text-gray-500 text-lg">No hired applicants available.</p>
+    <p className="text-gray-500 text-lg">No accepted applicantions available.</p>
   </div>
 )}
 
